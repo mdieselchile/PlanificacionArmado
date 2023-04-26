@@ -84,6 +84,7 @@ namespace PlanificacionArmado
             Seccion.SelectionChangeCommitted += Seccion_SelectionChangeCommitted;
             Cliente.SelectionChangeCommitted += Cliente_SelectionChangeCommitted;
             SucursalCliente.SelectionChangeCommitted += SucursalCliente_SelectionChangeCommitted;
+
             MenuimprimirGraf.Click += MenuimprimirGraf_Click;
             MenuMostrarHH.Click += MenuMostrarHH_Click;
             MenuFecEntrEval.Click += MenuFecEntrEval_Click;
@@ -93,12 +94,14 @@ namespace PlanificacionArmado
             MenuAbrirRutaHoja.Click += MenuAbrirRutaHoja_Click;
             
             MenuActualizarProcParal.Click += MenuActualizarProcParal_Click;
+
+            MenuDetenerTrabajo.Click += MenuDetenerTrabajo_Click;
             
             MenuActualizarFechaInicioCorridos.Click += MenuActualizarFechaInicioCorridos_Click;
             MenuActualizarFechaInicioHabiles.Click += MenuActualizarFechaInicioHabiles_Click;
             MenuActualizarFechaInicioTodosHabiles.Click += MenuActualizarFechaInicioTodosHabiles_Click;
-            MenuActualizarFechaInicioTodosCorridos.Click += MenuActualizarFechaInicioTodosCorridos_Click;                       
-
+            MenuActualizarFechaInicioTodosCorridos.Click += MenuActualizarFechaInicioTodosCorridos_Click;            
+            MenuReanudarTrabajo.Click += MenuReanudarTrabajo_Click;
             MenuActualFechasProcesoHojasCorr.Click += MenuActualFechasProcesoHojasCorr_Click;
             MenuActualFechasProcesoHojas.Click += MenuActualFechasProcesoHojas_Click;            
             MenuActualizarSegProc.Click += MenuActualizarSegProc_Click;
@@ -124,7 +127,7 @@ namespace PlanificacionArmado
             GrillaSegRepInter.DoubleClick += GrillasSeguimientos_DoubleClick;
             GrillaSegRepNac.DoubleClick += GrillasSeguimientos_DoubleClick;
             GrillaSegSub.DoubleClick += GrillasSeguimientos_DoubleClick;
-        }
+        }       
 
         private void GrillasSeguimientos_DoubleClick(object sender, EventArgs e)
         {            
@@ -1711,7 +1714,6 @@ namespace PlanificacionArmado
                 plan.ActualizarEstadoEntregaInformesTecnicos(numOT, estado, OrdenTrabajo.OrdenTrabajo.TipoInformeTecnico.InfFinal);
             }                        
         }
-
         private void ActualizarHHEstimadas()
         {
             //Actualiza horas estimadas del proceso seleccionado            
@@ -1825,7 +1827,7 @@ namespace PlanificacionArmado
                 Numero_OT = Numero_OT,
                 NumeroHoja = NumeroHoja,
                 ItemHoja = ItemHoja,
-                Actualizar = Actualizacion.TipoActualizacion.EstadoProc
+                Actualizar = Actualizacion.TipoActualizacion.EstadoProc                
             };                        
             pl.ShowDialog(this);
             if (pl.ActualizacionCorrecta)
@@ -1833,7 +1835,7 @@ namespace PlanificacionArmado
                 ListarDatos();
                 PlanillaHojas.CurrentCell = PlanillaHojas[0, fila];
             }
-        }
+        }       
         private void ActualizarSeguimiento(DataGridView flex)
         {
             try
@@ -1841,9 +1843,9 @@ namespace PlanificacionArmado
                 string msg = string.Empty;
                 int fila = PlanillaOT.CurrentRow.Index;
                 int.TryParse(PlanillaOT[(int)CF.NumeroOT, fila].Value.ToString(), out int numero);
-                var pl = new Planificacion.Planificacion()
+                var pl = new ActualizacionesPlanificacion()
                 {
-                    NumeroOT1 = numero,
+                    NumeroOT = numero,
                 };
                 bool result;
                 flex.CommitEdit(DataGridViewDataErrorContexts.Commit);
@@ -2823,6 +2825,16 @@ namespace PlanificacionArmado
         {
             ActualizaEstadoProceso();
         }
+        private void MenuReanudarTrabajo_Click(object sender, EventArgs e)
+        {
+            AccionTrabajo(1);
+        }
+
+        private void MenuDetenerTrabajo_Click(object sender, EventArgs e)
+        {
+            AccionTrabajo(0);            
+        }
+
         private void MenuActualizarProcParal_Click(object sender, EventArgs e)
         {            
             ActualizarProcesosParalelos();            
@@ -2840,14 +2852,7 @@ namespace PlanificacionArmado
         {
             AbrirOT();
         }
-        private void DetenerTrabajoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AccionTrabajo(0);
-        }
-        private void ReanudarTrabajoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AccionTrabajo(1);
-        }
+       
         private void Timer1_Tick(object sender, EventArgs e)
         {
             PanelMsg.Text = string.Empty;

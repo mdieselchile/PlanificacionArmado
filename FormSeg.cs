@@ -5,14 +5,15 @@ namespace PlanificacionArmado
 {
     public partial class FormSeg : Form
     {
-        public FormSeg()
+        public FormSeg(string comentario)
         {
             InitializeComponent();
             BotonOK.Click += BotonOK_Click;
             BotonCancel.Click += BotonCancel_Click;
+            Comentario.Text = comentario;
         }
         public string TextoComentario { get; set; }
-
+        
         private void BotonCancel_Click(object sender, EventArgs e)
         {
             TextoComentario = string.Empty;

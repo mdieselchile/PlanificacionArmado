@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Recursos;
+using System;
 using System.Windows.Forms;
 
 namespace PlanificacionArmado
@@ -10,7 +11,7 @@ namespace PlanificacionArmado
         /// </summary>
         [STAThread]
         static void Main(string[] args)
-        {
+        {            
             string msg = Utilidades.BaseDatos.Parametro(Utilidades.BaseDatos.Parametros.MsgErrorAbrirApp);
             PlanArmado.Vista vista;
             if (args.Length == 0)

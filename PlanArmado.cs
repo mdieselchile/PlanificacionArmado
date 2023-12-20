@@ -1,19 +1,24 @@
 ﻿using Maestros;
 using Maestros.Estados;
+using Maestros.OportunidadMejora;
 using Maestros.Tipos;
+using OrdenTrabajo;
 using Planificacion;
 using Recursos;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Forms.DataVisualization.Charting;
 using Utilidades;
 using static PlanificacionArmado.PlanArmado;
+using static System.Net.WebRequestMethods;
 
 namespace PlanificacionArmado
 {
@@ -23,14 +28,21 @@ namespace PlanificacionArmado
         #region Declaraciones
         //Controla que no se ejecuten rutinas causadas por eventos de controles
         private bool EventoCodigo = false;
+        private bool RefrescoGrilla = true;
         //Codigo de linea de productos en nivel3, a partir de codigo en gen_nivel3
         protected int CodigoNivel3Homologado = 0;        
         protected string UsuarioConectado = string.Empty;
         protected int RolUsuarioConectado = 0;
 
         private readonly Color ColorLetra = Color.White;
-        private readonly Color ColorAtraso = Color.OrangeRed;
-
+        private readonly Color ColorAtraso = Color.Orange;
+        private readonly Color ColorRetrasado = Color.Yellow;
+        private readonly Color ColorSuspendida = Color.CornflowerBlue;
+        private readonly Color ColorFueraPlazo = Color.Red;
+        private readonly Color ColorAtiempo = Color.Black;
+        private readonly Color ColorCargaHHMayorEstima = Color.PaleVioletRed;
+        private readonly Color ColorAporteClte = Color.Magenta;
+        private const int UnDiaMenosUnMinuto = 1439;
         ///////Constantes
         //5 segundos para mostrar mensajes en barra estado
         private const int INTERVALO_ACTUALIZACION = 5000;
@@ -39,9 +51,9 @@ namespace PlanificacionArmado
         public const int TeclaBackSpace = 8;
 
         private const string MsgAviso = "Sólo se pueden actualizar HH estimadas de procesos 'En Ejecución'";
-        private const string MsgErrorFechaProd = "Fecha entrega producción no puede ser menor a la actual";
+        private const string MsgErrorFechaProd = "Fecha entrega planificada no puede ser menor a la actual";
         private const string MsgErrorFechaRecup = "Fecha entrega recuperación no puede ser menor a la actual";
-        private const string MsgOK = "Fecha entrega producción actualizada";
+        private const string MsgOK = "Fecha entrega planificada actualizada";
         private const string MsgOKRecup = "Fecha entrega recuperación actualizada";
         private const string MsgFechaEvalIni = "Fecha inicio evaluación actualizada";
         private const string MsgFechaEvalFin = "Fecha término evaluación actualizada";        
@@ -60,12 +72,11 @@ namespace PlanificacionArmado
         private string TituloEjeX = "Secciones desarme y armado";
         private string TituloGrafico;
         private bool MostrarOcultarSeguimientos = true;
-        #endregion
-
+        #endregion        
         public PlanArmado()
         {
             InitializeComponent();
-            Inicializar();
+            Inicializar();            
         }
 
         public PlanArmado(Vista vista)
@@ -73,6 +84,7 @@ namespace PlanificacionArmado
             InitializeComponent();
             GetVista = vista;
             Inicializar();
+           
         }
 
         private void Inicializar()
@@ -105,19 +117,32 @@ namespace PlanificacionArmado
             MenuActualFechasProcesoHojasCorr.Click += MenuActualFechasProcesoHojasCorr_Click;
             MenuActualFechasProcesoHojas.Click += MenuActualFechasProcesoHojas_Click;            
             MenuActualizarSegProc.Click += MenuActualizarSegProc_Click;
-
-            PlanillaCapacidad.RowEnter += PlanillaCapacidad_RowEnter;            
+                    
+            PlanillaCapacidad.RowEnter += PlanillaCapacidad_RowEnter;                
             PlanillaCapacidadPeriodo.Scroll += PlanillaCapacidadSemanal_Scroll;
             PlanillaCapacidadPeriodo.ColumnWidthChanged += PlanillaCapacidadSemanal_ColumnWidthChanged;
             FechaEntregaProduccionIni.ValueChanged += FechaCapIni_ValueChanged;
             FechaEntregaProduccionFin.ValueChanged += FechaCapFin_ValueChanged;
 
-            PlanillaOT.CellPainting += new DataGridViewCellPaintingEventHandler(PlanillaOT_CellPainting);
-            PlanillaOT.Paint += new PaintEventHandler(PlanillaOT_Paint);
-            PlanillaOT.Scroll += new ScrollEventHandler(PlanillaOT_Scroll);
-            PlanillaOT.ColumnWidthChanged += new DataGridViewColumnEventHandler(PlanillaOT_ColumnWidthChanged);
-            PlanillaOT.CellContentClick += PlanillaOT_CellContentClick;
+            PlanillaOT.CellPainting += PlanillaOT_CellPainting;
+            PlanillaOT.Paint += PlanillaOT_Paint;
+            PlanillaOT.Scroll += PlanillaOT_Scroll;
+            PlanillaOT.ColumnWidthChanged += PlanillaOT_ColumnWidthChanged;            
+            PlanillaOT.CellClick += PlanillaOT_CellClick;
+            PlanillaOT.CellDoubleClick += PlanillaOT_CellDoubleClick;
+            PlanillaOT.CellEndEdit += PlanillaOT_CellEndEdit;
+            PlanillaOT.CellLeave += PlanillaOT_CellLeave;
+            PlanillaOT.CellMouseDown += PlanillaOT_CellMouseDown;
+            PlanillaOT.CellValidating += PlanillaOT_CellValidating;
+            PlanillaOT.ColumnHeaderMouseClick += PlanillaOT_ColumnHeaderMouseClick;
+            PlanillaOT.DataError += PlanillaOT_DataError;
+            PlanillaOT.RowEnter += PlanillaOT_RowEnter;
+            PlanillaOT.CellContentClick += PlanillaOT_CellContentClick;            
 
+            //PlanillaOT.RowPostPaint += PlanillaOT_RowPostPaint;
+            //PlanillaOT.RowPrePaint += PlanillaOT_RowPrePaint;
+            //PlanillaOT.CurrentCellChanged += PlanillaOT_CurrentCellChanged;
+            //PlanillaOT.RowHeightChanged += PlanillaOT_RowHeightChanged;            
             chkClte.CheckedChanged += ChkClte_CheckedChanged;
             chkSucClte.CheckedChanged += ChkSucClte_CheckedChanged;
 
@@ -127,63 +152,30 @@ namespace PlanificacionArmado
             GrillaSegRepInter.DoubleClick += GrillasSeguimientos_DoubleClick;
             GrillaSegRepNac.DoubleClick += GrillasSeguimientos_DoubleClick;
             GrillaSegSub.DoubleClick += GrillasSeguimientos_DoubleClick;
-        }       
+            GrillaSegProc.CellFormatting += GrillasSeguimientos_CellFormatting;
 
-        private void GrillasSeguimientos_DoubleClick(object sender, EventArgs e)
-        {            
-            TransferirComentarioSeguimiento((DataGridView)sender);
+
+            LblSuspend.CheckedChanged += LblSuspend_CheckedChanged;
+            LblAtraso.CheckedChanged += LblAtraso_CheckedChanged;
+            LblFuera.CheckedChanged += LblFuera_CheckedChanged;
+            LblRetraso.CheckedChanged += LblRetraso_CheckedChanged;
+            LblHH.CheckedChanged += LblHH_CheckedChanged;
+            LblATiempo.CheckedChanged += LblATiempo_CheckedChanged;
+
+            BotonTrabajos.Click += BotonTrabajos_Click;
         }
 
-        private void TransferirComentarioSeguimiento(DataGridView flex)
+       
+        private void BotonTrabajos_Click(object sender, EventArgs e)
         {
-            var frmSeg = new FormSeg
-            {
-                StartPosition = FormStartPosition.CenterParent
-            };
-            frmSeg.ShowDialog(this);                     
-            flex[1, flex.CurrentRow.Index].Value = frmSeg.TextoComentario;
-        }
-        private void MenuActualizarSegProc_Click(object sender, EventArgs e)
-        {
-            Type ty = this.ActiveControl.GetType();
-            if (ty.Equals(typeof(DataGridView)))
-                ActualizarSeguimiento((DataGridView)this.ActiveControl);
-        }
-
-        private void ChkSucClte_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!chkSucClte.Checked)
-            {               
-                SucursalCliente.SelectedIndex = -1;
-            }
-        }
-
-        private void SucursalCliente_SelectionChangeCommitted(object sender, EventArgs e)
-        {
-            chkSucClte.Checked = true;
-        }
-
-        private void ChkClte_CheckedChanged(object sender, EventArgs e)
-        {
-            if (!chkClte.Checked)
-            {
-                Cliente.SelectedIndex = -1;
-                SucursalCliente.SelectedIndex = -1;
-            }
-            
-        }
-
-        private void Cliente_SelectionChangeCommitted(object sender, EventArgs e)
-        {
-            CargaSucursalesCliente();
-            chkClte.Checked = true;
+            TrabajosEnCurso();
         }
 
         #region Enumeraciones
 
         public enum Vista
         {
-            Planificacion, Taller, Comercial,Armado,Recuperacion
+            Planificacion, Taller, Comercial,Armado,Recuperacion,Presupuesto,ControlCalidad
         }        
         public Vista GetVista { get; set; }
         private enum CF
@@ -200,44 +192,50 @@ namespace PlanificacionArmado
             Avance = 9,
             HrsEstimadas = 10,
             HrsCargadas = 11,
-            HrsPendientes = 12,           
+            HrsPendientes = 12,
+           
             FechaRecepcion = 13,
             DiasEnTaller = 14,
             DiasEnProceso=15,
             FechaInicioEval = 16,
             FechaFinEval = 17,
             FechaFinEvalReal = 18,
-            FechaInicioPlanif = 19,
-            FechaFinPlanif = 20,
-            FechaFinPlanifReal = 21,
-            FechaInicioPpto = 22,
-            FechaFinPpto = 23,
-            FechaFinPptoReal = 24,
-            FechaInicioRep = 25,
-            FechaEntregaRecup = 26,
-            FechaInicioArmado = 27,
-            FechaFinRep = 28,
-            FechaFinRepReal = 29,
-            FechaArribo = 30,
-            FechaEntregaProd = 31,
-            FechaLiberacion = 32,
-            FechaDespacho = 33,
-            FechaEntregaClte = 34,
-
-            Suspendida = 35,
-            CodigoEstado = 36,
-            DetalleOT = 37,
-            Responsable = 38,
-            Asistente = 39,
-            Dossier = 40,
-            MotivoIncum = 41,
-            InfRC = 42,
-            InfEval = 43,
-            InfFinal = 44,
-            Vendedor = 45,
-            OcCliente = 46,
-            ValorTrabajo = 47,
-            OfertaVenta = 48
+            FechaReprogEval = 19,
+            FechaInicioPlanif = 20,
+            FechaFinPlanif = 21,
+            FechaFinPlanifReal = 22,
+            FechaReprogPlanif = 23,
+            FechaInicioPpto = 24,
+            FechaFinPpto = 25,
+            FechaFinPptoReal = 26,
+            FechaReprogPpto = 27,
+            FechaInicioRep = 28,
+            FechaEntregaRecup = 29,
+            FechaInicioArmado = 30,
+            FechaFinRep = 31,
+            FechaFinRepReal = 32,
+            FechaArribo = 33,
+            FechaEntregaProd = 34,
+            FechaLiberacion = 35,
+            FechaDespacho = 36,
+            FechaEntregaClte = 37,
+            Suspendida = 38,
+            CodigoEstado = 39,
+            DetalleOT = 40,
+            Responsable = 41,
+            Asistente = 42,
+            Dossier = 43,
+            MotivoIncum = 44,
+            InfRC = 45,
+            InfEval = 46,
+            InfFinal = 47,
+            Vendedor = 48,
+            OcCliente = 49,
+            ValorTrabajo = 50,
+            OfertaVenta = 51,
+            EstadoEntrega = 52,
+            CodigoFab = 53,
+            AporteClte = 54
         }
 
         public enum CD
@@ -246,7 +244,6 @@ namespace PlanificacionArmado
             Dias, HorasCargadas,DiasRestantes,FechaIni,FechaFin,Predecesor,
             CodigoEstadoProc
         }
-
        
         public enum Area
         {
@@ -254,7 +251,12 @@ namespace PlanificacionArmado
         }
         private enum ColCap
         {
-            Seccion, HCapacidad, HEstim, HCarga, HDisp, HPorCargar
+            Seccion, HCapacidad, HEstim, HCarga, HDisp, HPorCargar            
+        }
+
+        private enum ColTrab
+        {
+            Trabajador, NumOT, NumHoja, Proceso, FechaIni, FechaFin, HoraIni, HoraFin, TiempoTrans, TiempoEstim
         }
         #endregion
 
@@ -404,6 +406,8 @@ namespace PlanificacionArmado
 
                 var epp = new EstadoProcesoProduccion(1);
                 epp.Listar(EstadoProceso);
+                var eet = new EstadoEntregaTrabajo(1);
+                eet.Listar(EstadoEntrega);
 
                 var cliente = new ClienteProveedor();
                 var lista = cliente.Listar("C");
@@ -411,6 +415,14 @@ namespace PlanificacionArmado
                 Cliente.DisplayMember = "RazonSocial";
                 Cliente.ValueMember = "RUT";
                 Cliente.SelectedIndex = -1;
+
+                var emp = new Empleado(1);
+                
+                var listaEmp = emp.ListarCarganHora();
+                EmpleadoTarea.DataSource = listaEmp;
+                EmpleadoTarea.DisplayMember = "Nombre";
+                EmpleadoTarea.ValueMember = "Codigo";
+                EmpleadoTarea.SelectedIndex = -1;
             });
             tarea.Start();
             await tarea;
@@ -442,6 +454,14 @@ namespace PlanificacionArmado
                     Text = "Planificación producción - Vista Fabricación y Recuperación";
                     TipoSec = Capacidades.TipoSeccion.Recuperacion;
                     break;
+                case Vista.Presupuesto:
+                    Text = "Planificación producción - Vista Presupuesto";
+                    TipoSec = Capacidades.TipoSeccion.Todas;
+                    break;
+                case Vista.ControlCalidad:
+                    Text = "Planificación producción - Vista Control de Calidad";
+                    TipoSec = Capacidades.TipoSeccion.Todas;
+                    break;
                 default:
                     break;
             }
@@ -465,7 +485,7 @@ namespace PlanificacionArmado
         private void ConfigurarGrillas()
         {
             Grillas.Grilla.FormatoPlanillas(PlanillaOT);
-            Grillas.Grilla.EvitaParpadeoGrilla(PlanillaOT);            
+            Grillas.Grilla.EvitaParpadeoGrilla(PlanillaOT);
             Grillas.Grilla.FormatoPlanillas(PlanillaHojas);
             Grillas.Grilla.EvitaParpadeoGrilla(PlanillaHojas);
 
@@ -474,7 +494,10 @@ namespace PlanificacionArmado
             Grillas.Grilla.FormatoPlanillas(PlanillaCapCentros);
             Grillas.Grilla.EvitaParpadeoGrilla(PlanillaCapCentros);
             Grillas.Grilla.FormatoPlanillas(PlanillaCapacidadPeriodo);
-            Grillas.Grilla.EvitaParpadeoGrilla(PlanillaCapacidadPeriodo);            
+            Grillas.Grilla.EvitaParpadeoGrilla(PlanillaCapacidadPeriodo);
+
+            Grillas.Grilla.FormatoPlanillas(GrillaTrabajos);
+            Grillas.Grilla.EvitaParpadeoGrilla(GrillaTrabajos);
         }
        
         #region FormatoPlanillaOT
@@ -483,11 +506,13 @@ namespace PlanificacionArmado
             try
             {
                 PlanillaOT.ReadOnly = false;
+
                 Font tipoLetra = new("Arial", 8);
-                if (GetVista == Vista.Comercial || GetVista == Vista.Taller)
+                if (GetVista == Vista.Comercial || GetVista == Vista.Taller || GetVista == Vista.Presupuesto || GetVista == Vista.ControlCalidad)
                 {
-                    tipoLetra = new Font("Calibri", 12);                    
-                    PlanillaOT.ColumnHeadersHeight = 50;
+                    tipoLetra = new Font("Calibri", 10);                    
+                    PlanillaOT.ColumnHeadersHeight = 60;
+                    PlanillaOT.ColumnHeadersDefaultCellStyle.Font = new Font("Calibri", 10);
                 }
                 else
                 {
@@ -497,12 +522,18 @@ namespace PlanificacionArmado
                 PlanillaOT.ClipboardCopyMode = DataGridViewClipboardCopyMode.EnableAlwaysIncludeHeaderText;
                 PlanillaOT.EditMode = DataGridViewEditMode.EditOnKeystroke;
                 PlanillaOT.AutoSizeRowsMode = DataGridViewAutoSizeRowsMode.AllCells;
-                PlanillaOT.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
-                PlanillaOT.DefaultCellStyle.SelectionBackColor = SystemColors.Highlight;
-                PlanillaOT.ScrollBars = ScrollBars.Both;
-
+                PlanillaOT.SelectionMode = DataGridViewSelectionMode.CellSelect;
+                
+                PlanillaOT.ScrollBars = ScrollBars.Both;                
                 PlanillaOT.ColumnHeadersDefaultCellStyle.Alignment = DataGridViewContentAlignment.BottomCenter;
                 PlanillaOT.Font = tipoLetra;
+
+                var celdaGrid = new DataGridViewCellStyle
+                {
+                    BackColor = Color.White,                    
+                };
+
+                PlanillaOT.DefaultCellStyle = celdaGrid;
 
                 var colSusp = new DataGridViewCheckBoxColumn()
                 {
@@ -527,6 +558,12 @@ namespace PlanificacionArmado
                     HeaderText = "IF ",
                     Width = 25
                 };
+                var colAporte = new DataGridViewCheckBoxColumn()
+                {
+                    Name = "aporteclte",
+                    HeaderText = "Aporte Clte ",
+                    Width = 25
+                };
 
                 PlanillaOT.Columns.Add("NumeroOT_0", "NumeroOT");
                 PlanillaOT.Columns.Add("Sucursal_1", "Sucursal");
@@ -537,22 +574,25 @@ namespace PlanificacionArmado
                 PlanillaOT.Columns.Add("Tipo_6", "Tipo");
                 PlanillaOT.Columns.Add("Estado_7", "Estado");
                 PlanillaOT.Columns.Add("Prioridad_8", "Prioridad");
+                PlanillaOT.Columns.Add("Avance_12", "Avance");
                 PlanillaOT.Columns.Add("HrsEstimadas_9", "HrsEstimadas");
                 PlanillaOT.Columns.Add("HrsCargadas_10", "HrsCargadas");
-                PlanillaOT.Columns.Add("HrsPendientes_11", "HrsPendientes");
-                PlanillaOT.Columns.Add("Avance_12", "Avance");
+                PlanillaOT.Columns.Add("HrsPendientes_11", "HrsPendientes");               
                 PlanillaOT.Columns.Add("FechaRecepcion_13", "FechaRecepcion");
                 PlanillaOT.Columns.Add("DiasEnTaller_14", "DiasEnTaller");
                 PlanillaOT.Columns.Add("DiasEnProceso", "DiasEnProceso");
                 PlanillaOT.Columns.Add("FechaInicioEval_15", "FechaInicioEval");
                 PlanillaOT.Columns.Add("FechaFinEval_16", "FechaFinEval");
                 PlanillaOT.Columns.Add("FechaFinEvalReal_17", "FechaFinEvalReal");
+                PlanillaOT.Columns.Add("FechaReprogEval", "Fecha Reprog Eval");
                 PlanillaOT.Columns.Add("FechaInicioPlanif_18", "FechaInicioPlanif");
                 PlanillaOT.Columns.Add("FechaFinPlanif_19", "FechaFinPlanif");
                 PlanillaOT.Columns.Add("FechaFinPlanifReal_20", "FechaFinPlanifReal");
+                PlanillaOT.Columns.Add("FechaReprogPlanif", "Fecha Reprog Planif");
                 PlanillaOT.Columns.Add("FechaInicioPpto_21", "FechaInicioPpto");
                 PlanillaOT.Columns.Add("FechaFinPpto_22", "FechaFinPpto");
                 PlanillaOT.Columns.Add("FechaFinPptoReal_23", "FechaFinPptoReal");
+                PlanillaOT.Columns.Add("FechaReprogPpto", "Fecha Reprog Ppto");
                 PlanillaOT.Columns.Add("FechaInicioRep_24", "FechaInicioRep");
                 PlanillaOT.Columns.Add("FechaEntregaRecup_25", "FechaEntregaRecup");
                 PlanillaOT.Columns.Add("FechaInicioArmado_26", "FechaInicioArmado");
@@ -579,10 +619,15 @@ namespace PlanificacionArmado
                 PlanillaOT.Columns.Add("OcCliente_43", "OcCliente");
                 PlanillaOT.Columns.Add("ValorTrabajo_44", "ValorTrabajo");
                 PlanillaOT.Columns.Add("OfertaVenta_45", "OfertaVenta");
+                PlanillaOT.Columns.Add("estadoentrega", "EstadoEntrega");
+                PlanillaOT.Columns.Add("codfab", "Codigo fabricado");
+                PlanillaOT.Columns.Add(colAporte);
 
                 PlanillaOT.Columns[(int)CF.Cliente].Frozen = true;
                 PlanillaOT.Columns[(int)CF.CodigoEstado].Visible = false;
-                PlanillaOT.Columns[(int)CF.DetalleOT].Visible = false;                
+                PlanillaOT.Columns[(int)CF.DetalleOT].Visible = false;
+                PlanillaOT.Columns[(int)CF.EstadoEntrega].Visible = false;
+                PlanillaOT.Columns[(int)CF.Prioridad].Visible = false;                
 
                 PlanillaOT.Columns[(int)CF.HrsCargadas].DefaultCellStyle.Format = "#,##0.00";
                 PlanillaOT.Columns[(int)CF.HrsPendientes].DefaultCellStyle.Format = "#,##0.00";                
@@ -597,7 +642,8 @@ namespace PlanificacionArmado
                 for (int i = 0; i < PlanillaOT.ColumnCount; i++)
                 {
                     PlanillaOT.Columns[i].ReadOnly = true;
-                }                
+                }
+                PlanillaOT.Columns[(int)CF.AporteClte].ReadOnly = false;
                 PlanillaOT.Columns[(int)CF.ValorTrabajo].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
                 PlanillaOT.Columns[(int)CF.DiasEnProceso].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
                 PlanillaOT.Columns[(int)CF.DiasEnTaller].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -605,6 +651,102 @@ namespace PlanificacionArmado
             catch (Exception ex)
             {                
                 SetErrorMsg(ex.Message);
+            }
+        }
+        private void OcultarColumnasSegunVista()
+        {
+            //Columnas no visibles si vista dif planificacion
+            if (GetVista != Vista.Planificacion)
+            {
+                TotalVentaPeriodo.Visible = false;
+                PlanillaOT.Columns[(int)CF.Tipo].Visible = false;
+                //PlanillaOT.Columns[(int)CF.Prioridad].Visible = false;
+
+                PlanillaOT.Columns[(int)CF.HrsEstimadas].Visible = false;
+                PlanillaOT.Columns[(int)CF.HrsPendientes].Visible = false;
+                PlanillaOT.Columns[(int)CF.Avance].Visible = false;
+                PlanillaOT.Columns[(int)CF.HrsCargadas].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaRecepcion].Visible = false;
+                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaInicioEval].Visible = false;
+
+                PlanillaOT.Columns[(int)CF.FechaFinEvalReal].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaInicioPlanif].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaFinPlanif].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaFinPlanifReal].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaInicioPpto].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaFinPpto].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaFinPptoReal].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaInicioRep].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaEntregaRecup].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaInicioArmado].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaFinRep].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaFinRepReal].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaArribo].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaLiberacion].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaDespacho].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaEntregaClte].Visible = false;
+                PlanillaOT.Columns[(int)CF.Suspendida].Visible = false;
+                PlanillaOT.Columns[(int)CF.Responsable].Visible = false;
+                PlanillaOT.Columns[(int)CF.Asistente].Visible = false;
+                PlanillaOT.Columns[(int)CF.Dossier].Visible = false;
+                PlanillaOT.Columns[(int)CF.MotivoIncum].Visible = false;
+                PlanillaOT.Columns[(int)CF.Vendedor].Visible = false;
+                PlanillaOT.Columns[(int)CF.OcCliente].Visible = false;
+                PlanillaOT.Columns[(int)CF.ValorTrabajo].Visible = false;
+                PlanillaOT.Columns[(int)CF.OfertaVenta].Visible = false;
+                PlanillaOT.Columns[(int)CF.DiasEnProceso].Visible = false;
+                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = false;
+
+                PlanillaOT.Columns[(int)CF.InfEval].Visible = false;
+                PlanillaOT.Columns[(int)CF.InfRC].Visible = false;
+                PlanillaOT.Columns[(int)CF.InfFinal].Visible = false;
+            }
+            if (GetVista == Vista.Comercial)
+            {
+                PlanillaOT.Columns[(int)CF.Sucursal].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaFinPpto].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaEntregaClte].Visible = true;
+                PlanillaOT.Columns[(int)CF.OcCliente].Visible = true;
+                PlanillaOT.Columns[(int)CF.Vendedor].Visible = true;
+                PlanillaOT.Columns[(int)CF.DiasEnProceso].Visible = true;
+            }
+            if (GetVista == Vista.Taller)
+            {
+                PlanillaOT.Columns[(int)CF.FechaFinRep].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaInicioEval].Visible = true;
+                PlanillaOT.Columns[(int)CF.Tipo].Visible = true;
+                //PlanillaOT.Columns[(int)CF.Prioridad].Visible = true;
+                PlanillaOT.Columns[(int)CF.Asistente].Visible = true;
+                PlanillaOT.Columns[(int)CF.Dossier].Visible = true;
+                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaEntregaClte].Visible = true;
+            }
+            if (GetVista == Vista.Presupuesto)
+            {
+                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = true;
+                PlanillaOT.Columns[(int)CF.Tipo].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaInicioPpto].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaFinPpto].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaFinPptoReal].Visible = true;
+
+                PlanillaOT.Columns[(int)CF.FechaFinEval].Visible = false;
+                PlanillaOT.Columns[(int)CF.FechaEntregaProd].Visible = true;
+                PlanillaOT.Columns[(int)CF.Responsable].Visible = true;
+                PlanillaOT.Columns[(int)CF.Asistente].Visible = true;                
+            }
+            if (GetVista == Vista.ControlCalidad)
+            {                
+                PlanillaOT.Columns[(int)CF.Tipo].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaInicioEval].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaFinEval].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaFinEvalReal].Visible = true;                
+                PlanillaOT.Columns[(int)CF.FechaEntregaProd].Visible = true;
+                PlanillaOT.Columns[(int)CF.FechaEntregaClte].Visible = true;
+                PlanillaOT.Columns[(int)CF.Responsable].Visible = true;
+                PlanillaOT.Columns[(int)CF.Asistente].Visible = true;
+                PlanillaOT.Columns[(int)CF.Dossier].Visible = true;
+                PlanillaOT.Columns[(int)CF.Vendedor].Visible = true;
             }
         }
         private void ConfigurarGrillaSeguimientos(DataGridView grilla)
@@ -635,7 +777,7 @@ namespace PlanificacionArmado
             //Columnas editables                
             if (RolUsuarioConectado == (int) Roles.Rol.Planif || UsuarioTieneRolAsignado())
             {
-                PlanillaOT.Columns[(int)CF.Prioridad].ReadOnly = false;
+                //PlanillaOT.Columns[(int)CF.Prioridad].ReadOnly = false;
                 PlanillaOT.Columns[(int)CF.FechaEntregaProd].ReadOnly = false;
                 PlanillaOT.Columns[(int)CF.FechaEntregaRecup].ReadOnly = false;
                 PlanillaOT.Columns[(int)CF.FechaInicioEval].ReadOnly = false;
@@ -653,7 +795,7 @@ namespace PlanificacionArmado
             }
         }
         private void TextoEncabezadoPlanillaOT()
-        {
+        {            
             PlanillaOT.Columns[(int)CF.NumeroOT].HeaderText = K.NumeroOT;
             PlanillaOT.Columns[(int)CF.DiasEnTaller].HeaderText = K.DiasEnTaller;
             
@@ -666,12 +808,16 @@ namespace PlanificacionArmado
             PlanillaOT.Columns[(int)CF.FechaInicioEval].HeaderText = K.FechaInicioEval;
             PlanillaOT.Columns[(int)CF.FechaFinEval].HeaderText = K.FechaFinEval;
             PlanillaOT.Columns[(int)CF.FechaFinEvalReal].HeaderText = K.FechaFinEvalReal;
+            PlanillaOT.Columns[(int)CF.FechaReprogEval].HeaderText = K.FechaReprogEval;
+
             PlanillaOT.Columns[(int)CF.FechaInicioPlanif].HeaderText = K.FechaInicioPlanif;
             PlanillaOT.Columns[(int)CF.FechaFinPlanif].HeaderText = K.FechaFinPlanif;
             PlanillaOT.Columns[(int)CF.FechaFinPlanifReal].HeaderText = K.FechaFinPlanifReal;
+            PlanillaOT.Columns[(int)CF.FechaReprogPlanif].HeaderText = K.FechaReprogPlanif;
             PlanillaOT.Columns[(int)CF.FechaInicioPpto].HeaderText = K.FechaInicioPpto;
             PlanillaOT.Columns[(int)CF.FechaFinPpto].HeaderText = K.FechaFinPpto;
             PlanillaOT.Columns[(int)CF.FechaFinPptoReal].HeaderText = K.FechaFinPptoReal;
+            PlanillaOT.Columns[(int)CF.FechaReprogPpto].HeaderText = K.FechaReprogPpto;
             PlanillaOT.Columns[(int)CF.FechaInicioRep].HeaderText = K.FechaInicioRep;
             PlanillaOT.Columns[(int)CF.FechaEntregaRecup].HeaderText = K.FechaEntregaRecup;
             PlanillaOT.Columns[(int)CF.FechaInicioArmado].HeaderText = K.FechaInicioArmado;
@@ -682,7 +828,7 @@ namespace PlanificacionArmado
             PlanillaOT.Columns[(int)CF.FechaDespacho].HeaderText = K.FechaDespacho;
             PlanillaOT.Columns[(int)CF.FechaEntregaClte].HeaderText = K.FechaEntregaClte;
             PlanillaOT.Columns[(int)CF.MotivoIncum].HeaderText = K.MotivoIncum;
-
+            PlanillaOT.Columns[(int)CF.DiasEnProceso].HeaderText = "Dias en proceso";
             if (GetVista == Vista.Comercial)
             {
                 PlanillaOT.Columns[(int)CF.FechaInicioEval].HeaderText = K.FechaInicioEvalVistas;
@@ -698,17 +844,22 @@ namespace PlanificacionArmado
                 PlanillaOT.Columns[(int)CF.FechaEntregaClte].HeaderText = K.FechaEntregaClteVistas;
                 PlanillaOT.Columns[(int)CF.FechaEntregaProd].HeaderText = K.FechaEntregaProdVistas;
                 PlanillaOT.Columns[(int)CF.DiasEnProceso].HeaderText = "Dias en proceso";
+                PlanillaOT.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
             }
-            else if (GetVista == Vista.Comercial || GetVista == Vista.Taller)
+            else if (GetVista == Vista.Comercial || GetVista == Vista.Taller || GetVista == Vista.Presupuesto || GetVista == Vista.ControlCalidad)
             {
                 PlanillaOT.Columns[(int)CF.FechaInicioEval].HeaderText = K.FechaInicioEvalVistas;
                 PlanillaOT.Columns[(int)CF.FechaFinEval].HeaderText = K.FechaFinEvalVistas;
                 PlanillaOT.Columns[(int)CF.FechaFinEvalReal].HeaderText = K.FechaFinEvalRealVistas;
                 PlanillaOT.Columns[(int)CF.FechaFinPpto].HeaderText = K.FechaFinPptoVistas;
+                PlanillaOT.Columns[(int)CF.FechaInicioPpto].HeaderText = K.FechaInicioPptoVistas;
+                PlanillaOT.Columns[(int)CF.FechaFinPptoReal].HeaderText = K.FechaFinPptoRealVistas;
                 PlanillaOT.Columns[(int)CF.FechaEntregaProd].HeaderText = K.FechaEntregaProdVistas;
                 PlanillaOT.Columns[(int)CF.FechaEntregaClte].HeaderText = K.FechaEntregaClteVistas;
                 PlanillaOT.Columns[(int)CF.FechaFinRep].HeaderText = K.FechaFinRepVistas;
-                PlanillaOT.Columns[(int)CF.DiasEnTaller].HeaderText = "Dias en taller";
+                PlanillaOT.Columns[(int)CF.DiasEnTaller].HeaderText = K.DiasEnTallerVistas;
+                PlanillaOT.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.DisplayedCells;
+               
             }                      
         }
         private void AnchoColumnasPlanillaOT()
@@ -724,19 +875,22 @@ namespace PlanificacionArmado
             PlanillaOT.Columns[(int)CF.HrsEstimadas].Width = 60;
             PlanillaOT.Columns[(int)CF.HrsCargadas].Width = 60;
             PlanillaOT.Columns[(int)CF.HrsPendientes].Width = 60;
-            PlanillaOT.Columns[(int)CF.Avance].Width = 50;
+            PlanillaOT.Columns[(int)CF.Avance].Width = 50;            
             PlanillaOT.Columns[(int)CF.FechaRecepcion].Width = 60;
             PlanillaOT.Columns[(int)CF.DiasEnTaller].Width = 60;
             PlanillaOT.Columns[(int)CF.DiasEnProceso].Width = 60;
             PlanillaOT.Columns[(int)CF.FechaInicioEval].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinEval].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinEvalReal].Width = 70;
+            PlanillaOT.Columns[(int)CF.FechaReprogEval].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaInicioPlanif].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinPlanif].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinPlanifReal].Width = 70;
+            PlanillaOT.Columns[(int)CF.FechaReprogPlanif].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaInicioPpto].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinPpto].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinPptoReal].Width = 70;
+            PlanillaOT.Columns[(int)CF.FechaReprogPpto].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaInicioRep].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaInicioArmado].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaFinRep].Width = 70;
@@ -749,6 +903,7 @@ namespace PlanificacionArmado
             PlanillaOT.Columns[(int)CF.FechaDespacho].Width = 70;
             PlanillaOT.Columns[(int)CF.FechaArribo].Width = 70;
             PlanillaOT.Columns[(int)CF.Suspendida].Width = 20;
+            PlanillaOT.Columns[(int)CF.CodigoFab].Width = 90;
 
             if (GetVista == Vista.Taller)
             {
@@ -875,6 +1030,47 @@ namespace PlanificacionArmado
                 SetErrorMsg(ex.Message);
             }
         }
+        private void ConfigurarGrillaTrabajos()
+        {
+            try
+            {                
+                GrillaTrabajos.ReadOnly = true;
+                GrillaTrabajos.AllowUserToResizeColumns = true;
+                
+                GrillaTrabajos.Columns[(int)ColTrab.FechaIni].DefaultCellStyle.Format = "dd/MM/yyyy";
+                GrillaTrabajos.Columns[(int)ColTrab.FechaFin].DefaultCellStyle.Format = "dd/MM/yyyy";
+                GrillaTrabajos.Columns[(int)ColTrab.FechaIni].HeaderText = "Fecha Inicio";
+                GrillaTrabajos.Columns[(int)ColTrab.FechaFin].HeaderText = "Fecha Fin";
+                GrillaTrabajos.Columns[(int)ColTrab.HoraIni].HeaderText = "Hora Inicio";
+                GrillaTrabajos.Columns[(int)ColTrab.HoraFin].HeaderText = "Hora Fin";
+                GrillaTrabajos.Columns[(int)ColTrab.TiempoTrans].HeaderText = "Cumplido";
+                GrillaTrabajos.Columns[(int)ColTrab.TiempoEstim].HeaderText = "Estimado";
+
+                GrillaTrabajos.Columns[(int)ColTrab.Trabajador].Width = 200;
+                GrillaTrabajos.Columns[(int)ColTrab.NumOT].Width = 60;
+                GrillaTrabajos.Columns[(int)ColTrab.NumHoja].Width = 40;
+                GrillaTrabajos.Columns[(int)ColTrab.Proceso].Width = 150;
+                GrillaTrabajos.Columns[(int)ColTrab.FechaIni].Width = 80;
+                GrillaTrabajos.Columns[(int)ColTrab.FechaFin].Width = 80;
+                GrillaTrabajos.Columns[(int)ColTrab.HoraIni].Width = 65;
+                GrillaTrabajos.Columns[(int)ColTrab.HoraFin].Width = 60;
+                GrillaTrabajos.Columns[(int)ColTrab.TiempoTrans].Width = 60;
+                GrillaTrabajos.Columns[(int)ColTrab.TiempoEstim].Width = 70;              
+                GrillaTrabajos.Columns[(int)ColTrab.HoraIni].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                GrillaTrabajos.Columns[(int)ColTrab.HoraFin].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                GrillaTrabajos.Columns[(int)ColTrab.TiempoTrans].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                GrillaTrabajos.Columns[(int)ColTrab.TiempoEstim].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                GrillaTrabajos.Columns[(int)ColTrab.NumOT].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                GrillaTrabajos.Columns[(int)ColTrab.NumHoja].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+                //GrillaTrabajos.Columns[(int)CD.CodigoEstadoProc].Visible = false;
+
+
+            }
+            catch (Exception ex)
+            {
+                SetErrorMsg(ex.Message);
+            }
+        }
         private void InicializarValoresControles()
         {
             //Inicializa controles de fecha con fecha de hoy
@@ -896,26 +1092,28 @@ namespace PlanificacionArmado
             Seccion.Enabled = true;
             PanelMsg.Text = string.Empty;
             TipoSec = Capacidades.TipoSeccion.Armado;         
-            tsslVersion.Text = Funciones.VersionAssembly();            
+            tsslVersion.Text = Funciones.VersionAssembly();
+
+            LblSuspend.BackColor = ColorSuspendida;
+            LblAtraso.BackColor = ColorAporteClte;
+            LblFuera.BackColor = ColorFueraPlazo;
+            LblRetraso.BackColor = ColorRetrasado;
+            LblHH.BackColor = ColorCargaHHMayorEstima;            
+
             ConfiguracionConexion.LeerAppConfig(BaseDatos.Parametro(BaseDatos.Parametros.NombreModeloEF));
             PanelConex.Text = "Base de datos: " + ConfiguracionConexion.BaseDeDatos + " en " + ConfiguracionConexion.Servidor;
+            if (GetVista != Vista.Armado && GetVista != Vista.Recuperacion)
+            {
+                FicheroPlanificacion.TabPages.RemoveAt(1);
+                FicheroPlanificacion.TabPages.RemoveAt(1);
+
+            }
             if (GetVista == Vista.Comercial)
             {
                 splitContainer1.Panel2Collapsed = true;
                 MenuVentas.Checked = true;
                 FicheroPlanificacion.TabPages.RemoveAt(1);
-                FicheroPlanificacion.TabPages.RemoveAt(1);
-            }
-            else if (GetVista == Vista.Taller)
-            {                
-                FicheroPlanificacion.TabPages.RemoveAt(1);
-                FicheroPlanificacion.TabPages.RemoveAt(1);
-            }
-            else if (GetVista == Vista.Planificacion)
-            {
-                FicheroPlanificacion.TabPages.RemoveAt(1);
-                FicheroPlanificacion.TabPages.RemoveAt(1);
-            }
+            }           
             else if (GetVista == Vista.Armado)
             {
                 TituloEjeX = "Secciones desarme y armado";
@@ -927,20 +1125,27 @@ namespace PlanificacionArmado
                 TituloGrafico = "Capacidad instalada secciones fabricación y recuperación";
             }
         }
-        private void ListarDatos()
+        private bool ListarDatos()
         {
             Cursor = Cursors.WaitCursor;
             chkVendedor.Enabled = true;
             PlanillaHojas.DataSource = null;
             if (ListarPlanificacion())
-            {                
-                ObtenerCapacidadesOT();                              
+            {
+                ObtenerCapacidadesOT();
                 CumplimientoPlazos();
                 tsbImprimir.Enabled = true;
+                Cursor = Cursors.Default;
+                return true;
+            }            
+            else
+            {
+                Cursor = Cursors.Default;
+                return false;
             }
-            Cursor = Cursors.Default;
-        }
-       
+                
+            
+        }       
         private List<int> DiasProceso(int CodigoTipo,int CodigoEstado,DateTime? FechaRecepcionComponente, DateTime? FechaFinPptoReal,DateTime? FechaInicioRep)
         {
             var pl = new Planificacion.Planificacion();
@@ -978,41 +1183,16 @@ namespace PlanificacionArmado
                     MostrarSoloOTDetenida = !MostrarOtDetenidas.Checked,                    
                     IncluirOtEvalEnFechaEntrega = MenuFecEntrEval.Checked,
                     RutCliente = Cliente.SelectedValue != null ? Cliente.SelectedValue.ToString() : string.Empty,
-                    CodigoSucCliente = SucursalCliente.SelectedValue != null ? int.Parse(SucursalCliente.SelectedValue.ToString()) : 0
+                    CodigoSucCliente = SucursalCliente.SelectedValue != null ? int.Parse(SucursalCliente.SelectedValue.ToString()) : 0,
+                    CodigoEstadoEntrega = EstadoEntrega.SelectedValue != null ? byte.Parse(EstadoEntrega.SelectedValue.ToString()) : (byte)0,
                 };
                 
                 var lst = pl.ListarOTsPlanificacion(ref msg);                
                 if (lst != null)
                 {
-                    TablaOTs = lst;                    
-                    PlanillaOT.RowCount = 0;
-                    int diasTallerEval,diasTallerRepar;
-                    foreach (var item in lst)
-                    {
-
-                        diasTallerEval = 0;
-                        diasTallerRepar = 0;                       
-                        var lsta = DiasProceso(item.CodigoTipo, item.CodigoEstado, item.FechaRecepcionComponente, item.FechaFinPptoReal, item.FechaInicioRep);
-                        if (lsta != null)
-                        {
-                            diasTallerEval = lsta[0];
-                            diasTallerRepar = lsta[1];
-                        }
-                        string mip = $"{item.MipPpto}{item.MipEval}{item.MipEntr}{item.MipPlan}{item.MipRepa}";
-                        int avance = pl.AvanceTrabajo(item.Numero);
-                        PlanillaOT.Rows.Add(item.Numero, item.Nivel1, item.Componente, item.Marca, item.Modelo, item.Cliente, item.TipoCorto, item.Estado,
-                            item.Prioridad, avance, 0, 0, 0, item.FechaRecepcionComponente, diasTallerEval, diasTallerRepar,
-                            item.FechaInicioEval, item.FechaFinEval, item.FechaFinEvalReal,
-                            item.FechaInicioPlanif, item.FechaFinPlanif, item.FechaFinPlanifReal,
-                            item.FechaInicioPpto, item.FechaFinPpto, item.FechaFinPptoReal,
-                            item.FechaInicioRep, item.FechaEntregaRecup, item.FechaInicioArmado, item.FechaFinRep, item.FechaFinRepReal,item.FechaArribo,
-                            item.FechaEntregaPlanificacion, item.FechaLiberacion, item.FechaDespacho, item.FechaEntregaCliente,
-                            item.OTSuspendida, item.CodigoEstado, item.Detalle, item.Responsable, item.Asistente,
-                            item.NombreDossier, mip, item.InfRC,item.InfEV,item.InfFin,
-                            item.Vendedor, item.OCcliente, item.ValorTrabajo, item.OfertaVenta);
-                    }                   
-                    tsslRegistros.Text = lst.Count.ToString() + " órdenes de trabajo";
-                    return true;
+                    TablaOTs = lst;
+                    LlenarGrillaPlanificacion(lst);
+                    return true;                                              
                 }
                 else
                 {                                        
@@ -1103,6 +1283,38 @@ namespace PlanificacionArmado
             Vendedor.SelectedIndex = -1;
             chkVendedor.Enabled = true;
         }
+        private void LlenarGrillaPlanificacion(SortableBindingList<GestionOrdenTrabajo.AuxGestion> listado)
+        {
+            var pl = new Planificacion.Planificacion();
+            PlanillaOT.RowCount = 0;
+            int diasTallerEval, diasTallerRepar;
+            foreach (var item in listado)
+            {
+                diasTallerEval = 0;
+                diasTallerRepar = 0;
+                var lsta = DiasProceso(item.CodigoTipo, item.CodigoEstado, item.FechaRecepcionComponente, item.FechaFinPptoReal, item.FechaInicioRep);
+                if (lsta != null)
+                {
+                    diasTallerEval = lsta[0];
+                    diasTallerRepar = lsta[1];
+                }
+                string mip = $"{item.MipPpto}{item.MipEval}{item.MipEntr}{item.MipPlan}{item.MipRepa}";
+                int avance = pl.AvanceTrabajo(item.Numero, item.CodigoEstado);
+                PlanillaOT.Rows.Add(item.Numero, item.Nivel1, item.Componente, item.Marca, item.Modelo, item.Cliente, item.TipoCorto, item.Estado,
+                    item.Prioridad, avance, 0, 0, 0, item.FechaRecepcionComponente, diasTallerEval, diasTallerRepar,
+                    item.FechaInicioEval, item.FechaFinEval, item.FechaFinEvalReal, item.FechaRepogramacionEval,
+                    item.FechaInicioPlanif, item.FechaFinPlanif, item.FechaFinPlanifReal,item.FechaRepogramacionPlanif,
+                    item.FechaInicioPpto, item.FechaFinPpto, item.FechaFinPptoReal, item.FechaRepogramacionPpto,
+                    item.FechaInicioRep, item.FechaEntregaRecup, item.FechaInicioArmado, item.FechaFinRep, item.FechaFinRepReal, item.FechaArribo,
+                    item.FechaEntregaPlanificacion, item.FechaLiberacion, item.FechaDespacho, item.FechaEntregaCliente,
+                    item.OTSuspendida, item.CodigoEstado, item.Detalle, item.Responsable, item.Asistente,
+                    item.NombreDossier, mip, item.InfRC, item.InfEV, item.InfFin,
+                    item.Vendedor, item.OCcliente, item.ValorTrabajo, item.OfertaVenta, item.CodigoEstadoEntrega,
+                    item.CodigoArticuloFabricado, item.AporteCliente);
+            }
+            tsslRegistros.Text = listado.Count.ToString() + " órdenes de trabajo";
+            
+        }
         private void FiltraPorVendedor()
         {
             try
@@ -1114,51 +1326,18 @@ namespace PlanificacionArmado
                 PlanillaOT.RowCount = 0;
                 if (Vendedor.Text != string.Empty)
                 {
-                    var lst = from dt in TablaOTs
-                            where dt.Vendedor == Vendedor.Text
-                            select dt;                    
-                    foreach (var item in lst)
-                    {
-                        string mip = $"{item.MipPpto}{item.MipEval}{item.MipEntr}{item.MipPlan}{item.MipRepa}";
-                        int diasTallerEval = 0;
-                        int diasTallerRepar = 0;
-                        var lsta = DiasProceso(item.CodigoTipo, item.CodigoEstado, item.FechaRecepcionComponente, item.FechaFinPptoReal, item.FechaInicioRep);
-                        if (lsta != null)
-                        {
-                            diasTallerEval = lsta[0];
-                            diasTallerRepar = lsta[1];
-                        }
-                        PlanillaOT.Rows.Add(item.Numero, item.Nivel1, item.Componente, item.Marca, item.Modelo, item.Cliente, item.Tipo, item.Estado,
-                            item.Prioridad,0, 0, 0, 0, item.FechaRecepcionComponente, diasTallerEval, diasTallerRepar,
-                            item.FechaInicioEval, item.FechaFinEval, item.FechaFinEvalReal,
-                            item.FechaInicioPlanif, item.FechaFinPlanif, item.FechaFinPlanifReal,
-                            item.FechaInicioPpto, item.FechaFinPpto, item.FechaFinPptoReal,
-                            item.FechaInicioRep, item.FechaEntregaRecup, item.FechaInicioArmado, item.FechaFinRep, item.FechaFinRepReal, item.FechaArribo,
-                            item.FechaEntregaPlanificacion, item.FechaLiberacion, item.FechaDespacho, item.FechaEntregaCliente,
-                            item.OTSuspendida, item.CodigoEstado, item.Detalle, item.Responsable, item.Asistente,
-                            item.NombreDossier, mip, item.InfRC, item.InfEV, item.InfFin,
-                            item.Vendedor,item.OCcliente,item.ValorTrabajo,item.OfertaVenta);
-                    }
-                    tsslRegistros.Text = lst.Count().ToString() + " órdenes de trabajo";
+                    var lst = (from dt in TablaOTs
+                              where dt.Vendedor == Vendedor.Text
+                              select dt).ToList();
+                    SortableBindingList<GestionOrdenTrabajo.AuxGestion> lista = new(lst);
+                    LlenarGrillaPlanificacion(lista);
                 }
                 else
-                {
-                    var lst = from dt in TablaOTs                              
-                              select dt;
-                    foreach (var item in lst)
-                    {
-                        PlanillaOT.Rows.Add(item.Numero, item.Nivel1, item.Componente, item.Marca, item.Modelo, item.Cliente, item.Tipo, item.Estado,
-                            item.Prioridad,0, 0, 0, 0, item.FechaRecepcionComponente, 0,0,
-                            item.FechaInicioEval, item.FechaFinEval, item.FechaFinEvalReal,
-                            item.FechaInicioPlanif, item.FechaFinPlanif, item.FechaFinPlanifReal,
-                            item.FechaInicioPpto, item.FechaFinPpto, item.FechaFinPptoReal,
-                            item.FechaInicioRep, item.FechaEntregaRecup, item.FechaInicioArmado, item.FechaFinRep, item.FechaFinRepReal, item.FechaArribo,
-                            item.FechaEntregaPlanificacion, item.FechaLiberacion, item.FechaDespacho, item.FechaEntregaCliente,
-                            item.Observacion, item.ComentarioRepuestos, item.OTSuspendida, item.CodigoEstado, item.Detalle, item.Responsable, item.Asistente,
-                             item.NombreDossier, item.MipPpto, item.InfRC, item.InfEV, item.InfFin,
-                            item.Vendedor, item.OCcliente, item.ValorTrabajo, item.OfertaVenta);
-                    }
-                    tsslRegistros.Text = lst.Count().ToString() + " órdenes de trabajo";
+                {                    
+                    var lst = (from dt in TablaOTs                               
+                               select dt).ToList();
+                    SortableBindingList<GestionOrdenTrabajo.AuxGestion> lista = new(lst);
+                    LlenarGrillaPlanificacion(lista);                   
                 }                               
                 ObtenerCapacidadesOT();                
                 CumplimientoPlazos();
@@ -1185,9 +1364,9 @@ namespace PlanificacionArmado
                 var qry = listaCapacidades.Find(x => x.NumeroOT == numOT);
                 if (qry != null)
                 {
-                    dr.Cells[(int)CF.HrsEstimadas].Value = qry.HorasEstimadas;
-                    dr.Cells[(int)CF.HrsCargadas].Value =  qry.HorasCargadas;
-                    dr.Cells[(int)CF.HrsPendientes].Value = qry.HorasPorCargar;
+                    dr.Cells[(int)CF.HrsEstimadas].Value = qry.HorasEstimadasHorario;
+                    dr.Cells[(int)CF.HrsCargadas].Value =  qry.HorasCargadasHorario;
+                    dr.Cells[(int)CF.HrsPendientes].Value = qry.HorasPorCargarHorario;
                 }                          
             }            
         }        
@@ -1206,7 +1385,7 @@ namespace PlanificacionArmado
             {
                 bool detenida = bool.Parse(PlanillaOT[(int)CF.Suspendida, i].Value.ToString());
                 if (detenida)
-                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = Color.LightCoral;
+                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = Color.CadetBlue;
             }
         }
         protected void CumplimientoPlazos()
@@ -1216,16 +1395,33 @@ namespace PlanificacionArmado
                 int codigoEstado = Convert.ToInt16(PlanillaOT[(int)CF.CodigoEstado, i].Value);
                 // Color rojo pendientes < 0 y OT's suspendidas                
                 bool otSuspendida = Convert.ToBoolean(PlanillaOT[(int)CF.Suspendida, i].Value);
-                double pdtes = Convert.ToDouble(PlanillaOT[(int)CF.HrsPendientes, i].Value);
+                bool otAporteClte = Convert.ToBoolean(PlanillaOT[(int)CF.AporteClte, i].Value);
+                _ = byte.TryParse(PlanillaOT[(int)CF.EstadoEntrega, i].Value.ToString(),out byte codEntrega);
+                string horasDec = PlanillaOT[(int)CF.HrsPendientes, i].Value.ToString();
+                double pdtes = 0;
+                if (horasDec != "0")
+                    pdtes = Funciones.ConvertirHoraSexagecimalEnDecimal(horasDec);
                 if (pdtes < 0)
                 {
-                    PlanillaOT.Rows[i].Cells[(int)CF.HrsPendientes].Style.BackColor = ColorAtraso;
-                    PlanillaOT.Rows[i].Cells[(int)CF.HrsPendientes].Style.ForeColor = ColorLetra;
+                    //Celda color
+                    PlanillaOT.Rows[i].Cells[(int)CF.HrsPendientes].Style.BackColor = ColorCargaHHMayorEstima;                    
                 }
                 if (otSuspendida == true)
+                    //Fila color
+                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = ColorSuspendida;                
+                if (codEntrega == 2)        //Retrasado        
                 {
-                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = Color.LightCoral;
+                    //Fila color
+                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = ColorRetrasado;                    
+                    
                 }
+                else if (codEntrega == 3) //Fuera de plazo
+                    //Fila color
+                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = ColorFueraPlazo;
+                if (otAporteClte == true)
+                    //Fila color
+                    PlanillaOT.Rows[i].DefaultCellStyle.BackColor = ColorAporteClte;
+                //Celda color
                 if (codigoEstado == (int) EstadOrdenTrabajo.Estados.Evaluacion || codigoEstado == (int)EstadOrdenTrabajo.Estados.Proceso 
                     || codigoEstado == (int)EstadOrdenTrabajo.Estados.Planificacion)
                 {
@@ -1355,11 +1551,13 @@ namespace PlanificacionArmado
             DateTime fechaEntregaClte = Convert.ToDateTime(PlanillaOT[(int)CF.FechaEntregaClte, i].Value);
             DateTime fechaEntregaProd = Convert.ToDateTime(PlanillaOT[(int)CF.FechaEntregaProd, i].Value);
 
+            if (fechaEntregaProd == DateTime.MinValue && fechaEntregaClte == DateTime.MinValue)
+                return;
             if (fechaEntregaProd != DateTime.MinValue)
             {                
                 if (fechaEntregaClte != DateTime.MinValue)
                     ts = fechaEntregaProd.Subtract(fechaEntregaClte);
-                else
+                else                    
                     ts = DateTime.Now.Subtract(fechaEntregaProd);
             }
             else
@@ -1509,7 +1707,7 @@ namespace PlanificacionArmado
 
                 if (HorasEstimadas < HorasCargadas)
                 {
-                    PlanillaHojas.Rows[i].Cells[(int)CD.HorasCargadas].Style.BackColor = ColorAtraso;
+                    PlanillaHojas.Rows[i].Cells[(int)CD.HorasCargadas].Style.BackColor = ColorCargaHHMayorEstima;
                 }
             }
         }
@@ -1615,10 +1813,10 @@ namespace PlanificacionArmado
                 switch (col)
                 {                   
                     //Actualizar prioridad
-                    case (int)CF.Prioridad:
-                        pl.Prioridad = byte.Parse(PlanillaOT[(int)CF.Prioridad, fila].Value.ToString());                        
-                        retorno = pl.ActualizarPrioridad();
-                        break;
+                    //case (int)CF.Prioridad:
+                    //    pl.Prioridad = byte.Parse(PlanillaOT[(int)CF.Prioridad, fila].Value.ToString());                        
+                    //    retorno = pl.ActualizarPrioridad();
+                    //    break;
                     case (int)CF.FechaEntregaProd:
                         fechaCorrecta = DateTime.TryParse(PlanillaOT[(int)CF.FechaEntregaProd, fila].Value.ToString(), out fecha);
                         if (fechaCorrecta)
@@ -1918,6 +2116,29 @@ namespace PlanificacionArmado
             }
 
         }
+
+        private void ActualizarAporteCliente(int fila)
+        {
+            try
+            {
+                PlanillaOT.CommitEdit(DataGridViewDataErrorContexts.Commit);
+                int numOT = int.Parse(PlanillaOT[(int)CF.NumeroOT, fila].Value.ToString());
+                bool estado = bool.Parse(PlanillaOT[(int)CF.AporteClte, fila].Value.ToString());
+                var plan = new ActualizacionesPlanificacion
+                {
+                    NumeroOT = numOT
+                };
+                if (plan.ActualizarAporteCliente(estado))
+                    Funciones.Mensajes(PanelMsg, "Aporte cliente actualizado", esError: false);
+                else
+                    SetErrorMsg(plan.Mensaje);
+            }
+            catch (Exception ex)
+            {
+                SetErrorMsg(ex.Message);
+            }
+
+        }
         #endregion
         private void PorteFormulario()
         {
@@ -2066,14 +2287,14 @@ namespace PlanificacionArmado
             string DetalleOT = PlanillaOT[(int)CF.DetalleOT, fila].Value.ToString();            
             TextoDetalleOT.Text = DetalleOT;
         }
-        private void MergeColumnas(PaintEventArgs e, string titulo, int columnaInicio, Color color, int cantColumnas = 3)
+        private void MergeColumnas(PaintEventArgs e, string titulo, int columnaInicio, Color color, int anchoTitulo)
         {            
             Font tipoLetra = new("Arial", 9, FontStyle.Bold);
-
+            Pen lapiz = new(new SolidBrush(Color.Black));
             Rectangle r1 = PlanillaOT.GetCellDisplayRectangle(columnaInicio, -1, true);
 
-            r1.Width *= cantColumnas;
-            r1.Height = r1.Height / 2 - 2;
+            r1.Width = anchoTitulo;
+            r1.Height = (r1.Height / 2) - 2;
             e.Graphics.FillRectangle(new SolidBrush(color), r1);
             StringFormat format = new()
             {
@@ -2081,10 +2302,24 @@ namespace PlanificacionArmado
                 LineAlignment = StringAlignment.Center
             };
             if (r1.X > 0)
-                e.Graphics.DrawString(titulo, tipoLetra, new SolidBrush(this.PlanillaOT.ColumnHeadersDefaultCellStyle.ForeColor), r1, format);            
-            //Dibuja linea
-            Pen lapiz = new(new SolidBrush(Color.Black));
+            {
+                int posicionLineaTitulo = (r1.Y + PlanillaOT.ColumnHeadersHeight / 2) - 3;
+                int anchoLineaTitulo = SumarAnchoColumnas(0, PlanillaOT.ColumnCount - 1) + PlanillaOT.RowHeadersWidth;
+                e.Graphics.DrawString(titulo, tipoLetra, new SolidBrush(this.PlanillaOT.ColumnHeadersDefaultCellStyle.ForeColor), r1, format);
+                e.Graphics.DrawLine(lapiz, r1.X, posicionLineaTitulo, anchoLineaTitulo, posicionLineaTitulo);
+            }
+                //e.Graphics.DrawString(titulo, tipoLetra, new SolidBrush(this.PlanillaOT.ColumnHeadersDefaultCellStyle.ForeColor), r1, format);            
+            //Dibuja linea            
             e.Graphics.DrawLine(lapiz, r1.X - 1, r1.Y, r1.X - 1, r1.Y + PlanillaOT.Height);
+        }
+        private int SumarAnchoColumnas(int colIni, int colFin)
+        {
+            int suma = 0;
+            for (int i = colIni; i <= colFin; i++)
+            {
+                suma += PlanillaOT.Columns[i].Width;
+            }
+            return suma;
         }
         private void BordesColumnas(PaintEventArgs e, int columnaInicio)
         {
@@ -2093,8 +2328,37 @@ namespace PlanificacionArmado
             r1.X += 1;
             r1.Y += 1;
             Pen lapiz = new(new SolidBrush(Color.Black));
-            e.Graphics.DrawLine(lapiz, r1.X - 2, r1.Y, r1.X - 2, r1.Y + PlanillaOT.Height);
+            e.Graphics.DrawLine(lapiz, r1.X - 2, r1.Y, r1.X - 2, r1.Y + PlanillaOT.Height);           
+
         }        
+        private void BordesFilaPaint(PaintEventArgs e, int columnaInicio)
+        {
+           
+            if (PlanillaOT.RowCount == 0 || GetVista != Vista.Planificacion) return;
+            
+            DataGridViewRow dr = PlanillaOT.CurrentRow;
+            if (dr != null)
+            {
+                Rectangle r2 = PlanillaOT.GetCellDisplayRectangle(columnaInicio, dr.Index, true);
+                Pen lapizFila = new(Color.Black, 2);
+                r2.Width = PlanillaOT.Width;
+                e.Graphics.DrawRectangle(lapizFila, r2);
+
+                if (RefrescoGrilla)
+                    InvalidarCeldas(dr.Index);
+
+                RefrescoGrilla = false;
+            }
+           
+        }               
+        private void InvalidarCeldas(int fila)
+        {
+            for (int j = 0; j < PlanillaOT.RowCount; j++)
+            {
+                if (j != fila)
+                    PlanillaOT.InvalidateRow(j);
+            }
+        }
         private void Pegar()
         {            
             //TextoComentarioOT.Text= Clipboard.GetText();
@@ -2102,72 +2366,7 @@ namespace PlanificacionArmado
         private void Copiar()
         {
             //Clipboard.SetText(TextoComentarioOT.Text);            
-        }
-        private void OcultarColumnasSegunVista()
-        {           
-            if (GetVista == Vista.Comercial || GetVista == Vista.Taller)//Columnas no visibles si vista dif planificacion
-            {                                
-                TotalVentaPeriodo.Visible = false;
-                PlanillaOT.Columns[(int)CF.Tipo].Visible = false;
-                PlanillaOT.Columns[(int)CF.Prioridad].Visible = false;
-
-                PlanillaOT.Columns[(int)CF.HrsEstimadas].Visible = false;
-                PlanillaOT.Columns[(int)CF.HrsPendientes].Visible = false;
-                PlanillaOT.Columns[(int)CF.Avance].Visible = false;
-                PlanillaOT.Columns[(int)CF.HrsCargadas].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaRecepcion].Visible = false;
-                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = false;                
-                PlanillaOT.Columns[(int)CF.FechaInicioEval].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinEval].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinEvalReal].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaInicioPlanif].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinPlanif].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinPlanifReal].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaInicioPpto].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinPpto].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinPptoReal].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaInicioRep].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaEntregaRecup].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaInicioArmado].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinRep].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaFinRepReal].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaArribo].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaLiberacion].Visible = false;                
-                PlanillaOT.Columns[(int)CF.FechaDespacho].Visible = false;
-                PlanillaOT.Columns[(int)CF.FechaEntregaClte].Visible = false;                
-                PlanillaOT.Columns[(int)CF.Suspendida].Visible = false;
-                PlanillaOT.Columns[(int)CF.Responsable].Visible = false;
-                PlanillaOT.Columns[(int)CF.Asistente].Visible = false;
-                PlanillaOT.Columns[(int)CF.Dossier].Visible = false;
-                PlanillaOT.Columns[(int)CF.MotivoIncum].Visible = false;
-                PlanillaOT.Columns[(int)CF.Vendedor].Visible = false;
-                PlanillaOT.Columns[(int)CF.OcCliente].Visible = false;
-                PlanillaOT.Columns[(int)CF.ValorTrabajo].Visible = false;
-                PlanillaOT.Columns[(int)CF.OfertaVenta].Visible = false;
-                PlanillaOT.Columns[(int)CF.DiasEnProceso].Visible = false;
-                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = false;
-            }
-            if (GetVista == Vista.Comercial)
-            {
-                PlanillaOT.Columns[(int)CF.Sucursal].Visible = true;
-                PlanillaOT.Columns[(int)CF.FechaFinEval].Visible = true;
-                PlanillaOT.Columns[(int)CF.FechaFinPpto].Visible = true;
-                PlanillaOT.Columns[(int)CF.FechaEntregaClte].Visible = true;
-                PlanillaOT.Columns[(int)CF.OcCliente].Visible = true;               
-                PlanillaOT.Columns[(int)CF.Vendedor].Visible = true;
-                PlanillaOT.Columns[(int)CF.DiasEnProceso].Visible = true;
-            }
-            if (GetVista == Vista.Taller)
-            {                                
-                PlanillaOT.Columns[(int)CF.FechaFinRep].Visible = true;
-                PlanillaOT.Columns[(int)CF.FechaInicioEval].Visible = true;
-                PlanillaOT.Columns[(int)CF.Tipo].Visible = true;
-                PlanillaOT.Columns[(int)CF.Prioridad].Visible = true;
-                PlanillaOT.Columns[(int)CF.Asistente].Visible = true;
-                PlanillaOT.Columns[(int)CF.Dossier].Visible = true;
-                PlanillaOT.Columns[(int)CF.DiasEnTaller].Visible = true;
-            }
-        }       
+        }        
         private void SetErrorMsg(string mensaje)
         {
             Funciones.SetMensajeError(PanelMsg, mensaje, 2);
@@ -2183,7 +2382,130 @@ namespace PlanificacionArmado
             SucursalCliente.ValueMember = "Numero";
             SucursalCliente.SelectedIndex = -1;
         }
+        private void TransferirComentarioSeguimiento(DataGridView flex)
+        {
+            string comentario = flex[1, flex.CurrentRow.Index].Value != null ? flex[1, flex.CurrentRow.Index].Value.ToString() : string.Empty;
+            var frmSeg = new FormSeg(comentario)
+            {
+                StartPosition = FormStartPosition.CenterParent,
+                TextoComentario = comentario
+            };
+            frmSeg.ShowDialog(this);
+            if (frmSeg.TextoComentario != string.Empty)
+                flex[1, flex.CurrentRow.Index].Value = frmSeg.TextoComentario;
+        }
+        private void FiltrarPlanificacion()
+        {            
+            int filasVisibles = 0;
+            for (int i = 0; i < PlanillaOT.RowCount; i++)
+            {                
+                PlanillaOT.Rows[i].Visible = false;             
+            }
+            
+            for (int i = 0; i < PlanillaOT.RowCount; i++)
+            {
+                bool.TryParse(PlanillaOT.Rows[i].Cells[(int)CF.Suspendida].Value.ToString(), out bool susp);
+                bool.TryParse(PlanillaOT.Rows[i].Cells[(int)CF.AporteClte].Value.ToString(), out bool aporte);
+                int.TryParse(PlanillaOT.Rows[i].Cells[(int)CF.EstadoEntrega].Value.ToString(), out int estadoEntrega);
 
+                if (LblRetraso.Checked && estadoEntrega == 2)
+                {
+                    PlanillaOT.Rows[i].Visible = true;
+                    filasVisibles += 1;
+                }
+                if (LblFuera.Checked && estadoEntrega == 3)
+                {
+                    PlanillaOT.Rows[i].Visible = true;
+                    filasVisibles += 1;
+                }
+                if (LblATiempo.Checked)
+                {
+                    if ((estadoEntrega == 1) || (estadoEntrega == 0 && !susp))
+                    {
+                        PlanillaOT.Rows[i].Visible = true;
+                        filasVisibles += 1;
+                    }
+                }                
+                if (LblSuspend.Checked)
+                {                    
+                    if (susp)
+                    {
+                        PlanillaOT.Rows[i].Visible = true;
+                        filasVisibles += 1;
+                    }
+                    
+                }
+                if (LblAtraso.Checked)
+                {
+                    if (aporte)
+                    {
+                        PlanillaOT.Rows[i].Visible = true;
+                        filasVisibles += 1;
+                    }
+
+                }
+                //if (LblHH.Checked)
+                //{
+                //    bool colorHH = PlanillaOT[(int)CF.HrsPendientes, i].Style.BackColor == ColorCargaHHMayorEstima;
+                //    if (colorHH)
+                //    {
+                //        PlanillaOT.Rows[i].Visible = true;
+                //        filasVisibles += 1;
+                //    }
+                //}
+
+                //if (LblAtraso.Checked)
+                //{
+                //    bool colorFinEval = PlanillaOT[(int)CF.FechaFinEval, i].Style.BackColor == ColorAtraso;
+                //    bool colorFinPlanif = PlanillaOT[(int)CF.FechaFinPlanif, i].Style.BackColor == ColorAtraso;
+                //    bool colorFinPpto = PlanillaOT[(int)CF.FechaFinRep, i].Style.BackColor == ColorAtraso;
+                //    bool colorFinRep = PlanillaOT[(int)CF.FechaFinRep, i].Style.BackColor == ColorAtraso;
+                //    bool colorEntrega = PlanillaOT[(int)CF.FechaEntregaClte, i].Style.BackColor == ColorAtraso;
+                //    if (colorFinEval || colorFinPlanif || colorFinPpto || colorFinRep || colorEntrega)
+                //    {
+                //        PlanillaOT.Rows[i].Visible = true;
+                //        filasVisibles += 1;
+                //    }
+                //}
+            }
+            if (filasVisibles == 0)
+            {
+                for (int i = 0; i < PlanillaOT.RowCount; i++)
+                {
+                    PlanillaOT.Rows[i].Visible = true;
+                    filasVisibles += 1;
+                }
+            }
+            tsslRegistros.Text = $"{filasVisibles} órdenes de trabajo]";
+        }
+
+        private void TrabajosEnCurso()
+        {
+            try
+            {
+                int codEmp = 0, codSuc = 0, codSec = 0;
+                if (EmpleadoTarea.SelectedValue != null)
+                    int.TryParse(EmpleadoTarea.SelectedValue.ToString(), out codEmp);
+                if (Sucursal.SelectedValue != null)
+                    int.TryParse(Sucursal.SelectedValue.ToString(), out codSuc);
+                if (Seccion.SelectedValue != null)
+                    int.TryParse(Seccion.SelectedValue.ToString(), out codSec);
+                var pl = new Planificacion.Planificacion()
+                {
+                    Nivel1 = codSuc,
+                    Nivel5 = codSec
+                };
+                var fechafin = FechaTrabajo.Value.Date.AddMinutes(UnDiaMenosUnMinuto);
+                var lst = pl.ListarTrabajosEnCurso(CheckTrabajosFin.Checked, FechaTrabajo.Value.Date, fechafin, codEmp);
+                GrillaTrabajos.DataSource = lst;
+                ConfigurarGrillaTrabajos();
+            }
+            catch (Exception ex)
+            {
+                Funciones.SetMensajeError(PanelMsg, ex.Message, ex: ex);                
+            }
+           
+        }
         #region Capacidad                   
         private void ObtenerCapacidadesSeccion()
         {
@@ -2273,7 +2595,9 @@ namespace PlanificacionArmado
                 CodigoNivel5 = codSec,
                 FechaInicial = fechaIni,
                 FechaFinal = fechaFin,
-                TipoDeSeccion = TipoSec
+                TipoDeSeccion = TipoSec,
+                EstadosOT = EstadosOTSel(),
+                TiposOT = TiposOTSel(),
             };
             var lst2 = capacidad.CapacidadSecciones();
                         
@@ -2446,7 +2770,7 @@ namespace PlanificacionArmado
             ConfigurarGrillas();
             ConfigurarGrillaCapacidadSecciones();
             ConfigurarGrillaCapacidadCentros();            
-            ConfigurarGrillaPlanificacion();
+            ConfigurarGrillaPlanificacion();            
             TextoEncabezadoPlanillaOT();
             HabilitarEdicionCeldas();
             AnchoColumnasPlanillaOT();
@@ -2476,16 +2800,17 @@ namespace PlanificacionArmado
         }
         private void BotonEjecutar_Click(object sender, EventArgs e)
         {
-            ListarDatos();
-            ObtenerCapacidadesSeccion();
-            if (MenuVentas.Checked && (GetVista == Vista.Planificacion || GetVista == Vista.Comercial))
+            if (ListarDatos())
             {
-                Cursor = Cursors.WaitCursor;
-                ObtenerDatosVentaSAP();                    
-                AgregarVendedorCombo();
-                Cursor = Cursors.Default;
-            }
-            
+                ObtenerCapacidadesSeccion();
+                if (MenuVentas.Checked && (GetVista == Vista.Planificacion || GetVista == Vista.Comercial))
+                {
+                    Cursor = Cursors.WaitCursor;
+                    ObtenerDatosVentaSAP();
+                    AgregarVendedorCombo();
+                    Cursor = Cursors.Default;
+                }
+            }        
         }
         
         private void TsbSalir_Click(object sender, EventArgs e)
@@ -2562,18 +2887,30 @@ namespace PlanificacionArmado
             HabilitarControles(Vendedor, chkVendedor.Checked);
 
         }
+        private void GrillasSeguimientos_CellFormatting(object sender, DataGridViewCellFormattingEventArgs e)
+        {
+            DataGridView dgv = (DataGridView)sender;
+            if ((e.ColumnIndex == dgv.Columns[1].Index) && e.Value != null)
+            {
+                DataGridViewCell cell = dgv.Rows[e.RowIndex].Cells[1];
+                cell.ToolTipText = "Doble clic para ingresar o abrir comentario";
+            }
+        }
+
         private void PlanillaOT_CellContentClick(object sender, DataGridViewCellEventArgs e)
         {
-            ActualizarEstadoInformes();
+            if (e.ColumnIndex == (int)CF.AporteClte)
+                ActualizarAporteCliente(e.RowIndex);
+            if (e.ColumnIndex == (int)CF.InfEval || e.ColumnIndex == (int)CF.InfFinal|| e.ColumnIndex == (int)CF.InfRC)
+                ActualizarEstadoInformes();
         }
         private void PlanillaOT_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             DataGridViewCell celda;
             if (e.RowIndex >= 0 && e.ColumnIndex >= 0)
-            {                              
+            {
                 celda = PlanillaOT[e.ColumnIndex, e.RowIndex];
                 celda.Style.SelectionBackColor = Color.Teal;
-                
             }
         }
         private void PlanillaOT_CellDoubleClick(object sender, DataGridViewCellEventArgs e)
@@ -2593,7 +2930,8 @@ namespace PlanificacionArmado
             DataGridViewCell celda;
 
             celda = PlanillaOT[e.ColumnIndex, e.RowIndex];
-            celda.Style.SelectionBackColor = SystemColors.Highlight;
+            var celdaInvisible = PlanillaOT[(int)CF.EstadoEntrega, e.RowIndex];
+            celda.Style.SelectionBackColor = celdaInvisible.Style.SelectionBackColor;
         }
         private void PlanillaOT_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
@@ -2611,11 +2949,7 @@ namespace PlanificacionArmado
                 MenuDetenerTrabajo.Enabled = !suspendida;
                 MenuReanudarTrabajo.Enabled = suspendida;
 
-                DataGridViewCell celda;
-                celda = PlanillaOT[e.ColumnIndex, e.RowIndex];
-                celda.Style.SelectionBackColor = Color.Teal;
-
-                if (RolUsuarioConectado != (int) Roles.Rol.Planif && !UsuarioTieneRolAsignado())
+                if (RolUsuarioConectado != (int)Roles.Rol.Planif && !UsuarioTieneRolAsignado())
                 {
                     MenuDetenerTrabajo.Enabled = false;
                     MenuReanudarTrabajo.Enabled = false;
@@ -2624,29 +2958,29 @@ namespace PlanificacionArmado
         }
         private void PlanillaOT_CellValidating(object sender, DataGridViewCellValidatingEventArgs e)
         {
-            if (PlanillaOT.CurrentCell != null && e.ColumnIndex == (int)CF.Prioridad &&
-               !PlanillaOT.Rows[e.RowIndex].IsNewRow && e.FormattedValue.ToString() != string.Empty)
-            {
-                bool valorCorrecto = int.TryParse(e.FormattedValue.ToString(), out int valorDigitado);
-                if (valorCorrecto)
-                {
-                    if (valorDigitado > ValorMaximoPrioridad)
-                    {                                                
-                        SetErrorMsg("Valor no permitido");
-                        e.Cancel = true;
-                    }
-                }
-                else
-                {
-                    SetErrorMsg("Valor no permitido");
-                    e.Cancel = true;
-                }
-            }
-            else
-                e.Cancel = false;
+            //if (PlanillaOT.CurrentCell != null && e.ColumnIndex == (int)CF.Prioridad &&
+            //   !PlanillaOT.Rows[e.RowIndex].IsNewRow && e.FormattedValue.ToString() != string.Empty)
+            //{
+            //    bool valorCorrecto = int.TryParse(e.FormattedValue.ToString(), out int valorDigitado);
+            //    if (valorCorrecto)
+            //    {
+            //        if (valorDigitado > ValorMaximoPrioridad)
+            //        {                                                
+            //            SetErrorMsg("Valor no permitido");
+            //            e.Cancel = true;
+            //        }
+            //    }
+            //    else
+            //    {
+            //        SetErrorMsg("Valor no permitido");
+            //        e.Cancel = true;
+            //    }
+            //}
+            //else
+            //    e.Cancel = false;
         }
         private void PlanillaOT_ColumnHeaderMouseClick(object sender, DataGridViewCellMouseEventArgs e)
-        {            
+        {
             ResaltaOTDetenida();
         }
         private void PlanillaOT_DataError(object sender, DataGridViewDataErrorEventArgs e)
@@ -2655,9 +2989,9 @@ namespace PlanificacionArmado
         }
         private void PlanillaOT_RowEnter(object sender, DataGridViewCellEventArgs e)
         {
-            if (EventoCodigo == true ) return;
+            if (EventoCodigo == true) return;
             if (ListarHojasOT(e.RowIndex))
-            {                
+            {
                 ColorProceso(PlanillaHojas);
                 MostrarDetalleOT(e.RowIndex);
                 ObtenerSeguimientoProcesos(e.RowIndex, GrillaSegProc, TipoSeguimiento.TiposDeSeguimiento.ProcesosOT);
@@ -2679,24 +3013,25 @@ namespace PlanificacionArmado
             Rectangle rtHeader = this.PlanillaOT.DisplayRectangle;
             rtHeader.Height = this.PlanillaOT.ColumnHeadersHeight / 2;
             this.PlanillaOT.Invalidate(rtHeader);
-            
+
         }
         private void PlanillaOT_Paint(object sender, PaintEventArgs e)
         {
             if (GetVista == Vista.Planificacion || GetVista == Vista.Armado || GetVista == Vista.Recuperacion)
             {
-                MergeColumnas(e, "Horas", (int)CF.HrsEstimadas, Color.FromArgb(200, 200, 200));
-                MergeColumnas(e, "Dias en taller", (int)CF.FechaRecepcion, Color.FromArgb(200, 200, 200));
-                MergeColumnas(e, "Plazos de Evaluación", (int)CF.FechaInicioEval, Color.FromArgb(200, 200, 200));
-                MergeColumnas(e, "Plazos de Planificacion", (int)CF.FechaInicioPlanif, Color.FromArgb(190, 190, 190));
-                MergeColumnas(e, "Plazos de Presupuesto", (int)CF.FechaInicioPpto, Color.FromArgb(180, 180, 180));
-                MergeColumnas(e, "Plazos de Reparación", (int)CF.FechaInicioRep, Color.FromArgb(170, 170, 170), 6);
-                MergeColumnas(e, "Plazos de Entrega", (int)CF.FechaEntregaProd, Color.FromArgb(160, 160, 160), 4);
-                MergeColumnas(e, "Datos SAP venta", (int)CF.Vendedor, Color.FromArgb(150, 150, 150), 4);
-                MergeColumnas(e, "Informes", (int)CF.InfRC, Color.FromArgb(140, 140, 140));
-                //BordesColumnas(e, (int)CF.Comentario);
+                MergeColumnas(e, "Tiempo", (int)CF.HrsEstimadas, Color.FromArgb(200, 200, 200), SumarAnchoColumnas((int)CF.HrsEstimadas, (int)CF.HrsPendientes));
+                MergeColumnas(e, "Dias en taller", (int)CF.FechaRecepcion, Color.FromArgb(200, 200, 200), SumarAnchoColumnas((int)CF.FechaRecepcion, (int)CF.DiasEnProceso));
+                MergeColumnas(e, "Plazos de Evaluación", (int)CF.FechaInicioEval, Color.FromArgb(200, 200, 200), SumarAnchoColumnas((int)CF.FechaInicioEval, (int)CF.FechaReprogEval));
+                MergeColumnas(e, "Plazos de Planificacion", (int)CF.FechaInicioPlanif, Color.FromArgb(190, 190, 190), SumarAnchoColumnas((int)CF.FechaInicioPlanif, (int)CF.FechaReprogPlanif));
+                MergeColumnas(e, "Plazos de Presupuesto", (int)CF.FechaInicioPpto, Color.FromArgb(180, 180, 180), SumarAnchoColumnas((int)CF.FechaInicioPpto, (int)CF.FechaReprogPpto));
+                MergeColumnas(e, "Plazos de Reparación", (int)CF.FechaInicioRep, Color.FromArgb(170, 170, 170), SumarAnchoColumnas((int)CF.FechaInicioRep, (int)CF.FechaArribo));
+                MergeColumnas(e, "Plazos de Entrega", (int)CF.FechaEntregaProd, Color.FromArgb(160, 160, 160), SumarAnchoColumnas((int)CF.FechaEntregaProd, (int)CF.FechaEntregaClte));
+                MergeColumnas(e, "Informes", (int)CF.InfRC, Color.FromArgb(140, 140, 140), SumarAnchoColumnas((int)CF.InfRC, (int)CF.InfFinal));
+                MergeColumnas(e, "Datos SAP venta", (int)CF.Vendedor, Color.FromArgb(150, 150, 150), SumarAnchoColumnas((int)CF.Vendedor, (int)CF.OfertaVenta));
+
                 BordesColumnas(e, (int)CF.Avance);
-            }            
+                BordesFilaPaint(e, 0);
+            }
         }
         private void PlanillaOT_CellPainting(object sender, DataGridViewCellPaintingEventArgs e)
         {
@@ -2708,8 +3043,11 @@ namespace PlanificacionArmado
                 e.PaintBackground(r2, true);
                 e.PaintContent(r2);
                 e.Handled = true;
+
             }
         }
+        
+
         private void PlanillaHojas_CellMouseDown(object sender, DataGridViewCellMouseEventArgs e)
         {
             if (e.Button == MouseButtons.Right && e.ColumnIndex >= 0)
@@ -2928,6 +3266,10 @@ namespace PlanificacionArmado
                 ActualizarHHEstimadas();
             else if (e.Control == true && e.KeyCode == Keys.H)
                 AbrirHojaRuta();
+            else if (e.KeyCode == Keys.Up || e.KeyCode == Keys.Down)
+            {
+                RefrescoGrilla = true;
+            }
         }
         private void MenuimprimirGraf_Click(object sender, EventArgs e)
         {
@@ -2984,9 +3326,75 @@ namespace PlanificacionArmado
         {
             MenuVentas.Checked = !MenuVentas.Checked;
         }
+        private void GrillasSeguimientos_DoubleClick(object sender, EventArgs e)
+        {
+            TransferirComentarioSeguimiento((DataGridView)sender);
+        }        
+        private void MenuActualizarSegProc_Click(object sender, EventArgs e)
+        {
+            Type ty = this.ActiveControl.GetType();
+            if (ty.Equals(typeof(DataGridView)))
+                ActualizarSeguimiento((DataGridView)this.ActiveControl);
+        }
 
-        #endregion
+        private void ChkSucClte_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!chkSucClte.Checked)
+            {
+                SucursalCliente.SelectedIndex = -1;
+            }
+        }
 
-       
+        private void SucursalCliente_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            chkSucClte.Checked = true;
+        }
+
+        private void ChkClte_CheckedChanged(object sender, EventArgs e)
+        {
+            if (!chkClte.Checked)
+            {
+                Cliente.SelectedIndex = -1;
+                SucursalCliente.SelectedIndex = -1;
+            }
+
+        }
+
+        private void Cliente_SelectionChangeCommitted(object sender, EventArgs e)
+        {
+            CargaSucursalesCliente();
+            chkClte.Checked = true;
+        }
+        private void LblATiempo_CheckedChanged(object sender, EventArgs e)
+        {
+            FiltrarPlanificacion();
+        }
+
+        private void LblHH_CheckedChanged(object sender, EventArgs e)
+        {
+            FiltrarPlanificacion();
+        }
+
+        private void LblRetraso_CheckedChanged(object sender, EventArgs e)
+        {
+            FiltrarPlanificacion();
+        }
+
+        private void LblFuera_CheckedChanged(object sender, EventArgs e)
+        {
+            FiltrarPlanificacion();
+        }
+
+        private void LblAtraso_CheckedChanged(object sender, EventArgs e)
+        {
+            FiltrarPlanificacion();
+        }
+
+        private void LblSuspend_CheckedChanged(object sender, EventArgs e)
+        {
+            FiltrarPlanificacion();
+        }
+        #endregion        
     }
+
 }

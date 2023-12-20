@@ -164,7 +164,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
-    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
@@ -230,7 +229,7 @@
     <None Include="Resources\accion.png" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Codigo sin usar.txt" />
+    <None Include="Resources\send_icon.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

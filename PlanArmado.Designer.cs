@@ -122,6 +122,13 @@ namespace PlanificacionArmado
             this.MenuActualizarEstadoProceso = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuActualizarProcParal = new System.Windows.Forms.ToolStripMenuItem();
             this.toolTip1 = new System.Windows.Forms.ToolTip(this.components);
+            this.GrillaSegProc = new System.Windows.Forms.DataGridView();
+            this.ContextMenuObs = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.MenuActualizarSegProc = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
+            this.MenuCopiar = new System.Windows.Forms.ToolStripMenuItem();
+            this.MenuPegar = new System.Windows.Forms.ToolStripMenuItem();
+            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.FicheroPlanificacion = new System.Windows.Forms.TabControl();
             this.FichaPlanificacion = new System.Windows.Forms.TabPage();
             this.FichaCarga = new System.Windows.Forms.TabPage();
@@ -131,19 +138,20 @@ namespace PlanificacionArmado
             this.PlanillaCapacidad = new System.Windows.Forms.DataGridView();
             this.FichaGrafico = new System.Windows.Forms.TabPage();
             this.ChartArmado = new System.Windows.Forms.DataVisualization.Charting.Chart();
-            this.ContextMenuObs = new System.Windows.Forms.ContextMenuStrip(this.components);
-            this.MenuActualizarSegProc = new System.Windows.Forms.ToolStripMenuItem();
-            this.toolStripMenuItem7 = new System.Windows.Forms.ToolStripSeparator();
-            this.MenuCopiar = new System.Windows.Forms.ToolStripMenuItem();
-            this.MenuPegar = new System.Windows.Forms.ToolStripMenuItem();
+            this.FichaTareas = new System.Windows.Forms.TabPage();
+            this.label12 = new System.Windows.Forms.Label();
+            this.EmpleadoTarea = new System.Windows.Forms.ComboBox();
+            this.CheckTrabajosFin = new System.Windows.Forms.CheckBox();
+            this.BotonTrabajos = new System.Windows.Forms.Button();
+            this.label9 = new System.Windows.Forms.Label();
+            this.FechaTrabajo = new System.Windows.Forms.DateTimePicker();
+            this.GrillaTrabajos = new System.Windows.Forms.DataGridView();
             this.label2 = new System.Windows.Forms.Label();
             this.TotalVenta = new System.Windows.Forms.TextBox();
             this.ContextMenuCap = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.toolStripMenuItem8 = new System.Windows.Forms.ToolStripMenuItem();
             this.toolStripMenuItem9 = new System.Windows.Forms.ToolStripMenuItem();
             this.MenuimprimirGraf = new System.Windows.Forms.ToolStripMenuItem();
-            this.GrillaSegProc = new System.Windows.Forms.DataGridView();
-            this.groupBox1 = new System.Windows.Forms.GroupBox();
             this.panel2 = new System.Windows.Forms.Panel();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.GrillaSegAporte = new System.Windows.Forms.DataGridView();
@@ -192,6 +200,14 @@ namespace PlanificacionArmado
             this.chkSucClte = new System.Windows.Forms.CheckBox();
             this.SucursalCliente = new System.Windows.Forms.ComboBox();
             this.grbFiltro = new System.Windows.Forms.GroupBox();
+            this.LblSuspend = new System.Windows.Forms.CheckBox();
+            this.LblHH = new System.Windows.Forms.CheckBox();
+            this.LblAtraso = new System.Windows.Forms.CheckBox();
+            this.LblATiempo = new System.Windows.Forms.CheckBox();
+            this.LblRetraso = new System.Windows.Forms.CheckBox();
+            this.LblFuera = new System.Windows.Forms.CheckBox();
+            this.EstadoEntrega = new System.Windows.Forms.ComboBox();
+            this.checkBox1 = new System.Windows.Forms.CheckBox();
             this.toolStrip1.SuspendLayout();
             this.GrupoOpciones.SuspendLayout();
             this.PanelDetalleOT.SuspendLayout();
@@ -208,6 +224,9 @@ namespace PlanificacionArmado
             this.splitContainer1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.PlanillaHojas)).BeginInit();
             this.cmsHojas.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.GrillaSegProc)).BeginInit();
+            this.ContextMenuObs.SuspendLayout();
+            this.groupBox1.SuspendLayout();
             this.FicheroPlanificacion.SuspendLayout();
             this.FichaPlanificacion.SuspendLayout();
             this.FichaCarga.SuspendLayout();
@@ -217,10 +236,9 @@ namespace PlanificacionArmado
             ((System.ComponentModel.ISupportInitialize)(this.PlanillaCapacidad)).BeginInit();
             this.FichaGrafico.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.ChartArmado)).BeginInit();
-            this.ContextMenuObs.SuspendLayout();
+            this.FichaTareas.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.GrillaTrabajos)).BeginInit();
             this.ContextMenuCap.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.GrillaSegProc)).BeginInit();
-            this.groupBox1.SuspendLayout();
             this.panel2.SuspendLayout();
             this.groupBox6.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.GrillaSegAporte)).BeginInit();
@@ -253,7 +271,7 @@ namespace PlanificacionArmado
             this.BarraProg});
             this.toolStrip1.Location = new System.Drawing.Point(0, 0);
             this.toolStrip1.Name = "toolStrip1";
-            this.toolStrip1.Size = new System.Drawing.Size(1356, 25);
+            this.toolStrip1.Size = new System.Drawing.Size(1285, 25);
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
@@ -297,15 +315,15 @@ namespace PlanificacionArmado
             // SegunFechaEntregaClienteToolStripMenuItem
             // 
             this.SegunFechaEntregaClienteToolStripMenuItem.Name = "SegunFechaEntregaClienteToolStripMenuItem";
-            this.SegunFechaEntregaClienteToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
+            this.SegunFechaEntregaClienteToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
             this.SegunFechaEntregaClienteToolStripMenuItem.Text = "Según fecha entrega cliente";
             this.SegunFechaEntregaClienteToolStripMenuItem.Click += new System.EventHandler(this.SegúnFechaEntregaClienteToolStripMenuItem_Click);
             // 
             // SegunFechaEntregaProducciónToolStripMenuItem
             // 
             this.SegunFechaEntregaProducciónToolStripMenuItem.Name = "SegunFechaEntregaProducciónToolStripMenuItem";
-            this.SegunFechaEntregaProducciónToolStripMenuItem.Size = new System.Drawing.Size(246, 22);
-            this.SegunFechaEntregaProducciónToolStripMenuItem.Text = "Según fecha entrega producción";
+            this.SegunFechaEntregaProducciónToolStripMenuItem.Size = new System.Drawing.Size(243, 22);
+            this.SegunFechaEntregaProducciónToolStripMenuItem.Text = "Según fecha entrega planificada";
             this.SegunFechaEntregaProducciónToolStripMenuItem.Click += new System.EventHandler(this.SegunFechaEntregaProducciónToolStripMenuItem_Click);
             // 
             // toolStripSeparator4
@@ -455,7 +473,7 @@ namespace PlanificacionArmado
             this.PanelDetalleOT.Controls.Add(this.label11);
             this.PanelDetalleOT.Location = new System.Drawing.Point(718, 28);
             this.PanelDetalleOT.Name = "PanelDetalleOT";
-            this.PanelDetalleOT.Size = new System.Drawing.Size(637, 67);
+            this.PanelDetalleOT.Size = new System.Drawing.Size(566, 95);
             this.PanelDetalleOT.TabIndex = 5;
             // 
             // TextoDetalleOT
@@ -465,7 +483,7 @@ namespace PlanificacionArmado
             this.TextoDetalleOT.Multiline = true;
             this.TextoDetalleOT.Name = "TextoDetalleOT";
             this.TextoDetalleOT.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.TextoDetalleOT.Size = new System.Drawing.Size(637, 43);
+            this.TextoDetalleOT.Size = new System.Drawing.Size(566, 71);
             this.TextoDetalleOT.TabIndex = 0;
             // 
             // label11
@@ -475,7 +493,7 @@ namespace PlanificacionArmado
             this.label11.Dock = System.Windows.Forms.DockStyle.Top;
             this.label11.Location = new System.Drawing.Point(0, 0);
             this.label11.Name = "label11";
-            this.label11.Size = new System.Drawing.Size(637, 24);
+            this.label11.Size = new System.Drawing.Size(566, 24);
             this.label11.TabIndex = 3;
             this.label11.Text = "Detalle trabajo";
             this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -665,17 +683,8 @@ namespace PlanificacionArmado
             this.PlanillaOT.Dock = System.Windows.Forms.DockStyle.Fill;
             this.PlanillaOT.Location = new System.Drawing.Point(0, 0);
             this.PlanillaOT.Name = "PlanillaOT";
-            this.PlanillaOT.Size = new System.Drawing.Size(1338, 195);
+            this.PlanillaOT.Size = new System.Drawing.Size(1267, 188);
             this.PlanillaOT.TabIndex = 3;
-            this.PlanillaOT.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PlanillaOT_CellClick);
-            this.PlanillaOT.CellDoubleClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.PlanillaOT_CellDoubleClick);
-            this.PlanillaOT.CellEndEdit += new System.Windows.Forms.DataGridViewCellEventHandler(this.PlanillaOT_CellEndEdit);
-            this.PlanillaOT.CellLeave += new System.Windows.Forms.DataGridViewCellEventHandler(this.PlanillaOT_CellLeave);
-            this.PlanillaOT.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.PlanillaOT_CellMouseDown);
-            this.PlanillaOT.CellValidating += new System.Windows.Forms.DataGridViewCellValidatingEventHandler(this.PlanillaOT_CellValidating);
-            this.PlanillaOT.ColumnHeaderMouseClick += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.PlanillaOT_ColumnHeaderMouseClick);
-            this.PlanillaOT.DataError += new System.Windows.Forms.DataGridViewDataErrorEventHandler(this.PlanillaOT_DataError);
-            this.PlanillaOT.RowEnter += new System.Windows.Forms.DataGridViewCellEventHandler(this.PlanillaOT_RowEnter);
             // 
             // cmsPlan
             // 
@@ -719,14 +728,14 @@ namespace PlanificacionArmado
             this.MenuDetenerTrabajo.Enabled = false;
             this.MenuDetenerTrabajo.Name = "MenuDetenerTrabajo";
             this.MenuDetenerTrabajo.Size = new System.Drawing.Size(363, 22);
-            this.MenuDetenerTrabajo.Text = "Detener trabajo";            
+            this.MenuDetenerTrabajo.Text = "Detener trabajo";
             // 
             // MenuReanudarTrabajo
             // 
             this.MenuReanudarTrabajo.Enabled = false;
             this.MenuReanudarTrabajo.Name = "MenuReanudarTrabajo";
             this.MenuReanudarTrabajo.Size = new System.Drawing.Size(363, 22);
-            this.MenuReanudarTrabajo.Text = "Reanudar trabajo";            
+            this.MenuReanudarTrabajo.Text = "Reanudar trabajo";
             // 
             // toolStripMenuItem1
             // 
@@ -778,9 +787,9 @@ namespace PlanificacionArmado
             this.tsslVersion,
             this.tsslRegistros,
             this.PanelMsg});
-            this.statusStrip1.Location = new System.Drawing.Point(0, 719);
+            this.statusStrip1.Location = new System.Drawing.Point(0, 707);
             this.statusStrip1.Name = "statusStrip1";
-            this.statusStrip1.Size = new System.Drawing.Size(1356, 22);
+            this.statusStrip1.Size = new System.Drawing.Size(1285, 22);
             this.statusStrip1.SizingGrip = false;
             this.statusStrip1.TabIndex = 4;
             this.statusStrip1.Text = "statusStrip1";
@@ -833,8 +842,8 @@ namespace PlanificacionArmado
             this.splitContainer1.Panel2.Controls.Add(this.label8);
             this.splitContainer1.Panel2.Controls.Add(this.EstadoProceso);
             this.splitContainer1.Panel2.Controls.Add(this.PlanillaHojas);
-            this.splitContainer1.Size = new System.Drawing.Size(1338, 365);
-            this.splitContainer1.SplitterDistance = 195;
+            this.splitContainer1.Size = new System.Drawing.Size(1267, 353);
+            this.splitContainer1.SplitterDistance = 188;
             this.splitContainer1.TabIndex = 5;
             // 
             // label8
@@ -889,7 +898,7 @@ namespace PlanificacionArmado
             dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
             dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.True;
             this.PlanillaHojas.RowHeadersDefaultCellStyle = dataGridViewCellStyle3;
-            this.PlanillaHojas.Size = new System.Drawing.Size(1338, 130);
+            this.PlanillaHojas.Size = new System.Drawing.Size(1267, 125);
             this.PlanillaHojas.TabIndex = 0;
             this.PlanillaHojas.CellMouseDown += new System.Windows.Forms.DataGridViewCellMouseEventHandler(this.PlanillaHojas_CellMouseDown);
             // 
@@ -992,6 +1001,69 @@ namespace PlanificacionArmado
             this.MenuActualizarProcParal.Size = new System.Drawing.Size(429, 22);
             this.MenuActualizarProcParal.Text = "Actualizar predecesores";
             // 
+            // toolTip1
+            // 
+            this.toolTip1.IsBalloon = true;
+            this.toolTip1.ShowAlways = true;
+            this.toolTip1.ToolTipTitle = "Comentarios";
+            this.toolTip1.UseAnimation = false;
+            // 
+            // GrillaSegProc
+            // 
+            this.GrillaSegProc.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.GrillaSegProc.ContextMenuStrip = this.ContextMenuObs;
+            this.GrillaSegProc.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.GrillaSegProc.Location = new System.Drawing.Point(3, 16);
+            this.GrillaSegProc.Name = "GrillaSegProc";
+            this.GrillaSegProc.Size = new System.Drawing.Size(274, 159);
+            this.GrillaSegProc.TabIndex = 60;
+            // 
+            // ContextMenuObs
+            // 
+            this.ContextMenuObs.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.MenuActualizarSegProc,
+            this.toolStripMenuItem7,
+            this.MenuCopiar,
+            this.MenuPegar});
+            this.ContextMenuObs.Name = "ContextMenuObs";
+            this.ContextMenuObs.Size = new System.Drawing.Size(196, 76);
+            // 
+            // MenuActualizarSegProc
+            // 
+            this.MenuActualizarSegProc.Name = "MenuActualizarSegProc";
+            this.MenuActualizarSegProc.Size = new System.Drawing.Size(195, 22);
+            this.MenuActualizarSegProc.Text = "Actualizar seguimiento";
+            // 
+            // toolStripMenuItem7
+            // 
+            this.toolStripMenuItem7.Name = "toolStripMenuItem7";
+            this.toolStripMenuItem7.Size = new System.Drawing.Size(192, 6);
+            // 
+            // MenuCopiar
+            // 
+            this.MenuCopiar.Name = "MenuCopiar";
+            this.MenuCopiar.Size = new System.Drawing.Size(195, 22);
+            this.MenuCopiar.Text = "Copiar";
+            this.MenuCopiar.Click += new System.EventHandler(this.MenuCopiar_Click);
+            // 
+            // MenuPegar
+            // 
+            this.MenuPegar.Name = "MenuPegar";
+            this.MenuPegar.Size = new System.Drawing.Size(195, 22);
+            this.MenuPegar.Text = "Pegar";
+            this.MenuPegar.Click += new System.EventHandler(this.MenuPegar_Click);
+            // 
+            // groupBox1
+            // 
+            this.groupBox1.Controls.Add(this.GrillaSegProc);
+            this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.groupBox1.Location = new System.Drawing.Point(3, 25);
+            this.groupBox1.Name = "groupBox1";
+            this.groupBox1.Size = new System.Drawing.Size(280, 178);
+            this.groupBox1.TabIndex = 62;
+            this.groupBox1.TabStop = false;
+            this.groupBox1.Text = "Procesos";
+            // 
             // FicheroPlanificacion
             // 
             this.FicheroPlanificacion.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
@@ -1000,10 +1072,11 @@ namespace PlanificacionArmado
             this.FicheroPlanificacion.Controls.Add(this.FichaPlanificacion);
             this.FicheroPlanificacion.Controls.Add(this.FichaCarga);
             this.FicheroPlanificacion.Controls.Add(this.FichaGrafico);
+            this.FicheroPlanificacion.Controls.Add(this.FichaTareas);
             this.FicheroPlanificacion.Location = new System.Drawing.Point(3, 317);
             this.FicheroPlanificacion.Name = "FicheroPlanificacion";
             this.FicheroPlanificacion.SelectedIndex = 0;
-            this.FicheroPlanificacion.Size = new System.Drawing.Size(1352, 397);
+            this.FicheroPlanificacion.Size = new System.Drawing.Size(1281, 385);
             this.FicheroPlanificacion.TabIndex = 4;
             // 
             // FichaPlanificacion
@@ -1012,7 +1085,7 @@ namespace PlanificacionArmado
             this.FichaPlanificacion.Location = new System.Drawing.Point(4, 22);
             this.FichaPlanificacion.Name = "FichaPlanificacion";
             this.FichaPlanificacion.Padding = new System.Windows.Forms.Padding(3);
-            this.FichaPlanificacion.Size = new System.Drawing.Size(1344, 371);
+            this.FichaPlanificacion.Size = new System.Drawing.Size(1273, 359);
             this.FichaPlanificacion.TabIndex = 0;
             this.FichaPlanificacion.Text = "Planificación";
             this.FichaPlanificacion.UseVisualStyleBackColor = true;
@@ -1030,7 +1103,7 @@ namespace PlanificacionArmado
             this.FichaCarga.Location = new System.Drawing.Point(4, 22);
             this.FichaCarga.Name = "FichaCarga";
             this.FichaCarga.Padding = new System.Windows.Forms.Padding(3);
-            this.FichaCarga.Size = new System.Drawing.Size(1344, 371);
+            this.FichaCarga.Size = new System.Drawing.Size(1273, 359);
             this.FichaCarga.TabIndex = 1;
             this.FichaCarga.Text = "Capacidad instalada";
             // 
@@ -1106,7 +1179,7 @@ namespace PlanificacionArmado
             this.FichaGrafico.Controls.Add(this.ChartArmado);
             this.FichaGrafico.Location = new System.Drawing.Point(4, 22);
             this.FichaGrafico.Name = "FichaGrafico";
-            this.FichaGrafico.Size = new System.Drawing.Size(1344, 371);
+            this.FichaGrafico.Size = new System.Drawing.Size(1273, 359);
             this.FichaGrafico.TabIndex = 2;
             this.FichaGrafico.Text = "Gráfico";
             this.FichaGrafico.UseVisualStyleBackColor = true;
@@ -1124,44 +1197,92 @@ namespace PlanificacionArmado
             series1.Legend = "Legend1";
             series1.Name = "Series1";
             this.ChartArmado.Series.Add(series1);
-            this.ChartArmado.Size = new System.Drawing.Size(1344, 371);
+            this.ChartArmado.Size = new System.Drawing.Size(1273, 359);
             this.ChartArmado.TabIndex = 2;
             this.ChartArmado.Text = "chart1";
             // 
-            // ContextMenuObs
+            // FichaTareas
             // 
-            this.ContextMenuObs.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.MenuActualizarSegProc,
-            this.toolStripMenuItem7,
-            this.MenuCopiar,
-            this.MenuPegar});
-            this.ContextMenuObs.Name = "ContextMenuObs";
-            this.ContextMenuObs.Size = new System.Drawing.Size(196, 76);
+            this.FichaTareas.Controls.Add(this.label12);
+            this.FichaTareas.Controls.Add(this.EmpleadoTarea);
+            this.FichaTareas.Controls.Add(this.CheckTrabajosFin);
+            this.FichaTareas.Controls.Add(this.BotonTrabajos);
+            this.FichaTareas.Controls.Add(this.label9);
+            this.FichaTareas.Controls.Add(this.FechaTrabajo);
+            this.FichaTareas.Controls.Add(this.GrillaTrabajos);
+            this.FichaTareas.Location = new System.Drawing.Point(4, 22);
+            this.FichaTareas.Name = "FichaTareas";
+            this.FichaTareas.Size = new System.Drawing.Size(1273, 359);
+            this.FichaTareas.TabIndex = 3;
+            this.FichaTareas.Text = "Trabajos en curso";
+            this.FichaTareas.UseVisualStyleBackColor = true;
             // 
-            // MenuActualizarSegProc
+            // label12
             // 
-            this.MenuActualizarSegProc.Name = "MenuActualizarSegProc";
-            this.MenuActualizarSegProc.Size = new System.Drawing.Size(195, 22);
-            this.MenuActualizarSegProc.Text = "Actualizar seguimiento";
+            this.label12.AutoSize = true;
+            this.label12.Location = new System.Drawing.Point(10, 41);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(58, 13);
+            this.label12.TabIndex = 68;
+            this.label12.Text = "Trabajador";
             // 
-            // toolStripMenuItem7
+            // EmpleadoTarea
             // 
-            this.toolStripMenuItem7.Name = "toolStripMenuItem7";
-            this.toolStripMenuItem7.Size = new System.Drawing.Size(192, 6);
+            this.EmpleadoTarea.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.EmpleadoTarea.FormattingEnabled = true;
+            this.EmpleadoTarea.Location = new System.Drawing.Point(86, 38);
+            this.EmpleadoTarea.Name = "EmpleadoTarea";
+            this.EmpleadoTarea.Size = new System.Drawing.Size(217, 21);
+            this.EmpleadoTarea.TabIndex = 67;
             // 
-            // MenuCopiar
+            // CheckTrabajosFin
             // 
-            this.MenuCopiar.Name = "MenuCopiar";
-            this.MenuCopiar.Size = new System.Drawing.Size(195, 22);
-            this.MenuCopiar.Text = "Copiar";
-            this.MenuCopiar.Click += new System.EventHandler(this.MenuCopiar_Click);
+            this.CheckTrabajosFin.AutoSize = true;
+            this.CheckTrabajosFin.Checked = true;
+            this.CheckTrabajosFin.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CheckTrabajosFin.Location = new System.Drawing.Point(199, 15);
+            this.CheckTrabajosFin.Name = "CheckTrabajosFin";
+            this.CheckTrabajosFin.Size = new System.Drawing.Size(104, 17);
+            this.CheckTrabajosFin.TabIndex = 66;
+            this.CheckTrabajosFin.Text = "Trabajos activos";
+            this.CheckTrabajosFin.UseVisualStyleBackColor = true;
             // 
-            // MenuPegar
+            // BotonTrabajos
             // 
-            this.MenuPegar.Name = "MenuPegar";
-            this.MenuPegar.Size = new System.Drawing.Size(195, 22);
-            this.MenuPegar.Text = "Pegar";
-            this.MenuPegar.Click += new System.EventHandler(this.MenuPegar_Click);
+            this.BotonTrabajos.Location = new System.Drawing.Point(335, 13);
+            this.BotonTrabajos.Name = "BotonTrabajos";
+            this.BotonTrabajos.Size = new System.Drawing.Size(75, 23);
+            this.BotonTrabajos.TabIndex = 65;
+            this.BotonTrabajos.Text = "Ejecutar";
+            this.BotonTrabajos.UseVisualStyleBackColor = true;
+            // 
+            // label9
+            // 
+            this.label9.AutoSize = true;
+            this.label9.Location = new System.Drawing.Point(10, 12);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(37, 13);
+            this.label9.TabIndex = 64;
+            this.label9.Text = "Fecha";
+            // 
+            // FechaTrabajo
+            // 
+            this.FechaTrabajo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.FechaTrabajo.Format = System.Windows.Forms.DateTimePickerFormat.Short;
+            this.FechaTrabajo.Location = new System.Drawing.Point(86, 12);
+            this.FechaTrabajo.Name = "FechaTrabajo";
+            this.FechaTrabajo.Size = new System.Drawing.Size(95, 20);
+            this.FechaTrabajo.TabIndex = 63;
+            // 
+            // GrillaTrabajos
+            // 
+            this.GrillaTrabajos.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left)));
+            this.GrillaTrabajos.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.GrillaTrabajos.Location = new System.Drawing.Point(8, 95);
+            this.GrillaTrabajos.Name = "GrillaTrabajos";
+            this.GrillaTrabajos.Size = new System.Drawing.Size(1258, 260);
+            this.GrillaTrabajos.TabIndex = 61;
             // 
             // label2
             // 
@@ -1175,6 +1296,7 @@ namespace PlanificacionArmado
             // 
             // TotalVenta
             // 
+            this.TotalVenta.BackColor = System.Drawing.SystemColors.Control;
             this.TotalVenta.Font = new System.Drawing.Font("Microsoft Sans Serif", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TotalVenta.Location = new System.Drawing.Point(846, 300);
             this.TotalVenta.Name = "TotalVenta";
@@ -1211,29 +1333,9 @@ namespace PlanificacionArmado
             this.MenuimprimirGraf.Size = new System.Drawing.Size(120, 22);
             this.MenuimprimirGraf.Text = "Imprimir";
             // 
-            // GrillaSegProc
-            // 
-            this.GrillaSegProc.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            this.GrillaSegProc.ContextMenuStrip = this.ContextMenuObs;
-            this.GrillaSegProc.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.GrillaSegProc.Location = new System.Drawing.Point(3, 16);
-            this.GrillaSegProc.Name = "GrillaSegProc";
-            this.GrillaSegProc.Size = new System.Drawing.Size(274, 159);
-            this.GrillaSegProc.TabIndex = 60;
-            // 
-            // groupBox1
-            // 
-            this.groupBox1.Controls.Add(this.GrillaSegProc);
-            this.groupBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.groupBox1.Location = new System.Drawing.Point(3, 25);
-            this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(280, 178);
-            this.groupBox1.TabIndex = 62;
-            this.groupBox1.TabStop = false;
-            this.groupBox1.Text = "Procesos";
-            // 
             // panel2
             // 
+            this.panel2.AutoSize = true;
             this.panel2.Controls.Add(this.groupBox6);
             this.panel2.Controls.Add(this.groupBox7);
             this.panel2.Controls.Add(this.groupBox4);
@@ -1241,9 +1343,9 @@ namespace PlanificacionArmado
             this.panel2.Controls.Add(this.groupBox2);
             this.panel2.Controls.Add(this.groupBox1);
             this.panel2.Controls.Add(this.label13);
-            this.panel2.Location = new System.Drawing.Point(717, 99);
+            this.panel2.Location = new System.Drawing.Point(717, 126);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(576, 578);
+            this.panel2.Size = new System.Drawing.Size(578, 574);
             this.panel2.TabIndex = 63;
             // 
             // groupBox6
@@ -1359,7 +1461,7 @@ namespace PlanificacionArmado
             this.label13.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label13.Location = new System.Drawing.Point(3, 0);
             this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(573, 24);
+            this.label13.Size = new System.Drawing.Size(575, 24);
             this.label13.TabIndex = 64;
             this.label13.Text = "Seguimiento recursos (F7 para mostrar/ocultar)";
             this.label13.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
@@ -1525,7 +1627,7 @@ namespace PlanificacionArmado
             this.FiltroFechas.Controls.Add(this.FechaEntregaIni);
             this.FiltroFechas.Location = new System.Drawing.Point(503, 0);
             this.FiltroFechas.Name = "FiltroFechas";
-            this.FiltroFechas.Size = new System.Drawing.Size(208, 281);
+            this.FiltroFechas.Size = new System.Drawing.Size(208, 208);
             this.FiltroFechas.TabIndex = 41;
             this.FiltroFechas.TabStop = false;
             // 
@@ -1533,7 +1635,7 @@ namespace PlanificacionArmado
             // 
             this.MostrarOtDetenidas.AutoSize = true;
             this.MostrarOtDetenidas.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MostrarOtDetenidas.Location = new System.Drawing.Point(11, 216);
+            this.MostrarOtDetenidas.Location = new System.Drawing.Point(9, 183);
             this.MostrarOtDetenidas.Name = "MostrarOtDetenidas";
             this.MostrarOtDetenidas.Size = new System.Drawing.Size(156, 17);
             this.MostrarOtDetenidas.TabIndex = 128;
@@ -1545,7 +1647,7 @@ namespace PlanificacionArmado
             // 
             this.MostrarOtActivas.AutoSize = true;
             this.MostrarOtActivas.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MostrarOtActivas.Location = new System.Drawing.Point(11, 197);
+            this.MostrarOtActivas.Location = new System.Drawing.Point(9, 164);
             this.MostrarOtActivas.Name = "MostrarOtActivas";
             this.MostrarOtActivas.Size = new System.Drawing.Size(144, 17);
             this.MostrarOtActivas.TabIndex = 127;
@@ -1558,7 +1660,7 @@ namespace PlanificacionArmado
             this.MostrarOtTodas.AutoSize = true;
             this.MostrarOtTodas.Checked = true;
             this.MostrarOtTodas.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MostrarOtTodas.Location = new System.Drawing.Point(11, 177);
+            this.MostrarOtTodas.Location = new System.Drawing.Point(9, 144);
             this.MostrarOtTodas.Name = "MostrarOtTodas";
             this.MostrarOtTodas.Size = new System.Drawing.Size(130, 17);
             this.MostrarOtTodas.TabIndex = 126;
@@ -1588,7 +1690,7 @@ namespace PlanificacionArmado
             // 
             this.chkVendedor.AutoSize = true;
             this.chkVendedor.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.chkVendedor.Location = new System.Drawing.Point(7, 139);
+            this.chkVendedor.Location = new System.Drawing.Point(7, 124);
             this.chkVendedor.Name = "chkVendedor";
             this.chkVendedor.Size = new System.Drawing.Size(72, 17);
             this.chkVendedor.TabIndex = 44;
@@ -1602,7 +1704,7 @@ namespace PlanificacionArmado
             this.Vendedor.Enabled = false;
             this.Vendedor.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.Vendedor.FormattingEnabled = true;
-            this.Vendedor.Location = new System.Drawing.Point(76, 137);
+            this.Vendedor.Location = new System.Drawing.Point(76, 122);
             this.Vendedor.Name = "Vendedor";
             this.Vendedor.Size = new System.Drawing.Size(122, 21);
             this.Vendedor.TabIndex = 7;
@@ -1647,9 +1749,9 @@ namespace PlanificacionArmado
             this.FechaEntregaProduccionCheck.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.FechaEntregaProduccionCheck.Location = new System.Drawing.Point(6, 13);
             this.FechaEntregaProduccionCheck.Name = "FechaEntregaProduccionCheck";
-            this.FechaEntregaProduccionCheck.Size = new System.Drawing.Size(151, 17);
+            this.FechaEntregaProduccionCheck.Size = new System.Drawing.Size(149, 17);
             this.FechaEntregaProduccionCheck.TabIndex = 0;
-            this.FechaEntregaProduccionCheck.Text = "Fecha entrega producción";
+            this.FechaEntregaProduccionCheck.Text = "Fecha entrega planificada";
             this.FechaEntregaProduccionCheck.UseVisualStyleBackColor = true;
             this.FechaEntregaProduccionCheck.CheckedChanged += new System.EventHandler(this.FechaEntregaProduccionCheck_CheckedChanged);
             // 
@@ -1763,6 +1865,14 @@ namespace PlanificacionArmado
             // grbFiltro
             // 
             this.grbFiltro.BackColor = System.Drawing.SystemColors.Control;
+            this.grbFiltro.Controls.Add(this.LblSuspend);
+            this.grbFiltro.Controls.Add(this.LblHH);
+            this.grbFiltro.Controls.Add(this.LblAtraso);
+            this.grbFiltro.Controls.Add(this.LblATiempo);
+            this.grbFiltro.Controls.Add(this.LblRetraso);
+            this.grbFiltro.Controls.Add(this.LblFuera);
+            this.grbFiltro.Controls.Add(this.EstadoEntrega);
+            this.grbFiltro.Controls.Add(this.checkBox1);
             this.grbFiltro.Controls.Add(this.SucursalCliente);
             this.grbFiltro.Controls.Add(this.chkSucClte);
             this.grbFiltro.Controls.Add(this.Cliente);
@@ -1793,11 +1903,103 @@ namespace PlanificacionArmado
             this.grbFiltro.TabStop = false;
             this.grbFiltro.Text = "Filtros";
             // 
+            // LblSuspend
+            // 
+            this.LblSuspend.AutoSize = true;
+            this.LblSuspend.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LblSuspend.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LblSuspend.Location = new System.Drawing.Point(607, 211);
+            this.LblSuspend.Name = "LblSuspend";
+            this.LblSuspend.Size = new System.Drawing.Size(79, 17);
+            this.LblSuspend.TabIndex = 60;
+            this.LblSuspend.Text = "Suspendida";
+            this.LblSuspend.UseVisualStyleBackColor = true;
+            // 
+            // LblHH
+            // 
+            this.LblHH.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LblHH.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LblHH.Location = new System.Drawing.Point(607, 249);
+            this.LblHH.Name = "LblHH";
+            this.LblHH.Size = new System.Drawing.Size(112, 17);
+            this.LblHH.TabIndex = 59;
+            this.LblHH.Text = "Carga > Plan";
+            this.LblHH.UseVisualStyleBackColor = true;
+            this.LblHH.Visible = false;
+            // 
+            // LblAtraso
+            // 
+            this.LblAtraso.AutoSize = true;
+            this.LblAtraso.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LblAtraso.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LblAtraso.Location = new System.Drawing.Point(607, 230);
+            this.LblAtraso.Name = "LblAtraso";
+            this.LblAtraso.Size = new System.Drawing.Size(88, 17);
+            this.LblAtraso.TabIndex = 58;
+            this.LblAtraso.Text = "Aporte cliente";
+            this.LblAtraso.UseVisualStyleBackColor = true;
+            // 
+            // LblATiempo
+            // 
+            this.LblATiempo.AutoSize = true;
+            this.LblATiempo.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LblATiempo.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LblATiempo.Location = new System.Drawing.Point(503, 249);
+            this.LblATiempo.Name = "LblATiempo";
+            this.LblATiempo.Size = new System.Drawing.Size(103, 17);
+            this.LblATiempo.TabIndex = 57;
+            this.LblATiempo.Text = "Entrega a tiempo";
+            this.LblATiempo.UseVisualStyleBackColor = true;
+            // 
+            // LblRetraso
+            // 
+            this.LblRetraso.AutoSize = true;
+            this.LblRetraso.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LblRetraso.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LblRetraso.Location = new System.Drawing.Point(503, 230);
+            this.LblRetraso.Name = "LblRetraso";
+            this.LblRetraso.Size = new System.Drawing.Size(107, 17);
+            this.LblRetraso.TabIndex = 56;
+            this.LblRetraso.Text = "Entrega retrasada";
+            this.LblRetraso.UseVisualStyleBackColor = true;
+            // 
+            // LblFuera
+            // 
+            this.LblFuera.FlatAppearance.CheckedBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(255)))), ((int)(((byte)(224)))), ((int)(((byte)(192)))));
+            this.LblFuera.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LblFuera.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.LblFuera.Location = new System.Drawing.Point(503, 211);
+            this.LblFuera.Name = "LblFuera";
+            this.LblFuera.Size = new System.Drawing.Size(103, 17);
+            this.LblFuera.TabIndex = 55;
+            this.LblFuera.Text = "Fuera de plazo";
+            this.LblFuera.UseVisualStyleBackColor = true;
+            // 
+            // EstadoEntrega
+            // 
+            this.EstadoEntrega.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.EstadoEntrega.FormattingEnabled = true;
+            this.EstadoEntrega.Location = new System.Drawing.Point(110, 229);
+            this.EstadoEntrega.Name = "EstadoEntrega";
+            this.EstadoEntrega.Size = new System.Drawing.Size(158, 21);
+            this.EstadoEntrega.TabIndex = 47;
+            // 
+            // checkBox1
+            // 
+            this.checkBox1.AutoSize = true;
+            this.checkBox1.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.checkBox1.Location = new System.Drawing.Point(4, 230);
+            this.checkBox1.Name = "checkBox1";
+            this.checkBox1.Size = new System.Drawing.Size(98, 17);
+            this.checkBox1.TabIndex = 48;
+            this.checkBox1.Text = "Estado entrega";
+            this.checkBox1.UseVisualStyleBackColor = true;
+            // 
             // PlanArmado
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1356, 741);
+            this.ClientSize = new System.Drawing.Size(1285, 729);
             this.Controls.Add(this.TotalVenta);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.statusStrip1);
@@ -1808,6 +2010,7 @@ namespace PlanificacionArmado
             this.Controls.Add(this.panel2);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.KeyPreview = true;
+            this.MinimumSize = new System.Drawing.Size(1024, 768);
             this.Name = "PlanArmado";
             this.Text = "Planificación armado/desarmado";
             this.WindowState = System.Windows.Forms.FormWindowState.Maximized;
@@ -1833,6 +2036,9 @@ namespace PlanificacionArmado
             this.splitContainer1.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.PlanillaHojas)).EndInit();
             this.cmsHojas.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.GrillaSegProc)).EndInit();
+            this.ContextMenuObs.ResumeLayout(false);
+            this.groupBox1.ResumeLayout(false);
             this.FicheroPlanificacion.ResumeLayout(false);
             this.FichaPlanificacion.ResumeLayout(false);
             this.FichaCarga.ResumeLayout(false);
@@ -1843,10 +2049,10 @@ namespace PlanificacionArmado
             ((System.ComponentModel.ISupportInitialize)(this.PlanillaCapacidad)).EndInit();
             this.FichaGrafico.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.ChartArmado)).EndInit();
-            this.ContextMenuObs.ResumeLayout(false);
+            this.FichaTareas.ResumeLayout(false);
+            this.FichaTareas.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.GrillaTrabajos)).EndInit();
             this.ContextMenuCap.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)(this.GrillaSegProc)).EndInit();
-            this.groupBox1.ResumeLayout(false);
             this.panel2.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.GrillaSegAporte)).EndInit();
@@ -2021,6 +2227,22 @@ namespace PlanificacionArmado
         private System.Windows.Forms.RadioButton MostrarOtDetenidas;
         private System.Windows.Forms.RadioButton MostrarOtActivas;
         private System.Windows.Forms.RadioButton MostrarOtTodas;
+        protected System.Windows.Forms.ComboBox EstadoEntrega;
+        protected System.Windows.Forms.CheckBox checkBox1;
+        private System.Windows.Forms.CheckBox LblSuspend;
+        private System.Windows.Forms.CheckBox LblHH;
+        private System.Windows.Forms.CheckBox LblAtraso;
+        private System.Windows.Forms.CheckBox LblATiempo;
+        private System.Windows.Forms.CheckBox LblRetraso;
+        private System.Windows.Forms.CheckBox LblFuera;
+        private System.Windows.Forms.TabPage FichaTareas;
+        private System.Windows.Forms.DataGridView GrillaTrabajos;
+        private System.Windows.Forms.Button BotonTrabajos;
+        private System.Windows.Forms.Label label9;
+        protected System.Windows.Forms.DateTimePicker FechaTrabajo;
+        private System.Windows.Forms.CheckBox CheckTrabajosFin;
+        protected System.Windows.Forms.ComboBox EmpleadoTarea;
+        private System.Windows.Forms.Label label12;
     }
 }
 

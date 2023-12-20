@@ -121,25 +121,28 @@
   <data name="ejecutardb" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\ejecutardb.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
+  <data name="accion" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\accion.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="agregar" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\agregar.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="redled" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\redled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
+  <data name="yellowled" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\yellowled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  </data>
   <data name="greenled" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\greenled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
   <data name="imprimir" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\imprimir.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="agregar" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\agregar.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="yellowled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\yellowled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
   <data name="salir_24x24" type="System.Resources.ResXFileRef, System.Windows.Forms">
     <value>..\Resources\salir_24x24.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
-  <data name="redled" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\redled.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
-  </data>
-  <data name="accion" type="System.Resources.ResXFileRef, System.Windows.Forms">
-    <value>..\Resources\accion.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
+  <data name="send_icon" type="System.Resources.ResXFileRef, System.Windows.Forms">
+    <value>..\Resources\send_icon.png;System.Drawing.Bitmap, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a</value>
   </data>
 </root>

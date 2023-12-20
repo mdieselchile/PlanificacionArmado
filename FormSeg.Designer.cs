@@ -69,8 +69,9 @@
             this.Controls.Add(this.BotonOK);
             this.Controls.Add(this.Comentario);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedToolWindow;
+            this.KeyPreview = true;
             this.Name = "FormSeg";
-            this.Text = "Cometario seguimiento";
+            this.Text = "Comentario seguimiento";
             this.ResumeLayout(false);
             this.PerformLayout();
 
